@@ -637,3 +637,4 @@ if __name__ == '__main__':
     print("Saved assets/npc_sprites.png")
 
     print("All pixel-art game assets generated successfully!")
+
