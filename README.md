@@ -8,6 +8,14 @@ Designed for hackathons, game showcases, and thoughtful education, **Bleuming** 
 
 ---
 
+## 🌐 Live Production URL
+
+- **Primary Live Link:** **[https://bleuming.vercel.app](https://bleuming.vercel.app)**
+- **Mirror Deployment:** **[https://bleuming-rdq706r88-niksxoxs-projects.vercel.app](https://bleuming-rdq706r88-niksxoxs-projects.vercel.app)**
+
+
+---
+
 ## 🎮 How to Play Locally (Instant Setup)
 
 Bleuming has **zero dependencies, no build steps, and no external npm packages**. It is 100% offline and self-contained with a built-in procedural Web Audio synthesizer.
