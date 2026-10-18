@@ -1,6 +1,7 @@
 /**
- * BLEUMING — Main Game Engine
- * A Y2K Cozy Pixel-Art Women's Wellbeing Exploration Game
+ * BLEUMING — Main Game Engine v2.0
+ * Authentic Y2K Cozy Pixel-Art Women's Wellbeing Game
+ * With dedicated PCOS/PCOD & Postpartum Experiences and Real Pixel Art Assets
  */
 
 // ============================================================================
@@ -38,7 +39,7 @@ const state = {
     y: 7 * TILE_SIZE,
     width: 22,
     height: 28,
-    speed: 2.4,
+    speed: 2.5,
     dir: 'down', // 'down', 'up', 'left', 'right'
     frame: 0,
     animTimer: 0,
@@ -49,7 +50,7 @@ const state = {
     y: 7 * TILE_SIZE,
     targetX: 7.5 * TILE_SIZE,
     targetY: 7 * TILE_SIZE,
-    expression: 'happy', // 'happy', 'thoughtful', 'concerned'
+    expression: 'happy', // 'happy', 'concerned'
     floatAngle: 0,
     speed: 2.0
   },
@@ -68,20 +69,23 @@ const state = {
     mirrorPcosDone: false,
     postpartumDone: false,
     forestDone: false,
-    fogDissolved: 0.0 // 0.0 (dense) to 1.0 (completely clear)
+    fogDissolved: 0.0 // 0.0 (dense) to 1.0 (clear)
   },
-  savedQuestions: [],
-  selectedSupportMessage: '',
+  savedPcosQuestions: [
+    "Can we check my LH/FSH ratio and order a pelvic ultrasound?",
+    "Could we run a fasting insulin & glucose test for metabolic sensitivity?"
+  ],
+  savedPpdTasks: [
+    "Drop off dinner on Tuesday (no hosting, just drop off).",
+    "Watch the baby for 2 hours so I can sleep."
+  ],
   activeInteractable: null,
-  particles: [],
-  bloomAnimationTimer: 0
+  particles: []
 };
 
 // ============================================================================
 // 3. MAP DATA (20 Cols x 15 Rows)
 // ============================================================================
-// TILE Types: 0=Grass, 1=Path, 2=Water, 3=Fence, 4=Tree, 5=Rock,
-//             6=Faded Flower, 8=Mirror, 9=House, 10=Bench, 11=Fountain
 const defaultMap = [
   [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
   [4, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 9, 9, 9, 0, 0, 4, 4, 4],
@@ -110,7 +114,7 @@ const floraCollectibles = [
     tileY: 4,
     color: '#a5d8ff',
     collected: false,
-    lore: 'A crystal holding morning dew. Reminds you to honor physical hydration & bodily sensations.'
+    lore: 'Morning dew. A reminder to check in with what your body is feeling today.'
   },
   {
     id: 'chamomile',
@@ -120,7 +124,7 @@ const floraCollectibles = [
     tileY: 10,
     color: '#fff3a8',
     collected: false,
-    lore: 'A gentle soothing sprout. Teaches that rest and emotional support are natural necessities.'
+    lore: 'Gentle chamomile sprout. Rest is a bodily requirement, not a reward to earn.'
   },
   {
     id: 'sunstone',
@@ -130,7 +134,7 @@ const floraCollectibles = [
     tileY: 3,
     color: '#ff9ec7',
     collected: false,
-    lore: 'A warm blossom that shines regardless of how quiet the garden gets. You deserve unconditional care.'
+    lore: 'Warm sunlight sprout. You do not have to look like anyone else to deserve care.'
   }
 ];
 
@@ -140,47 +144,47 @@ const interactables = [
     id: 'mirror',
     tileX: 3,
     tileY: 3,
-    prompt: 'Examine Shifting Mirror',
+    prompt: 'Examine Saffron & the Shifting Mirror',
     onInteract: () => handleMirrorInteraction()
   },
   {
     id: 'house',
     tileX: 13,
     tileY: 4,
-    prompt: 'Visit Porch of the Tired Moon',
+    prompt: 'Visit Maya on the Cottage Porch',
     onInteract: () => handleHouseInteraction()
   },
   {
     id: 'forest',
     tileX: 18,
     tileY: 10,
-    prompt: 'Explore Misty Thicket',
+    prompt: 'Enter the Misty Thicket',
     onInteract: () => handleForestInteraction()
   },
   {
     id: 'fountain',
     tileX: 9,
     tileY: 7,
-    prompt: 'Listen to Garden Fountain',
+    prompt: 'Listen to Fountain Ripples',
     onInteract: () => handleFountainInteraction()
   },
   {
     id: 'bench',
     tileX: 10,
     tileY: 3,
-    prompt: 'Sit & Breathe with Nihi',
+    prompt: 'Sit with Nihi',
     onInteract: () => handleBenchInteraction()
   }
 ];
 
 // ============================================================================
-// 4. CANVAS RENDERING ENGINE & PROCEDURAL SPRITES
+// 4. CANVAS RENDERING ENGINE & PIXEL SPRITES
 // ============================================================================
 const canvas = document.getElementById('game-canvas');
 const ctx = canvas.getContext('2d');
 ctx.imageSmoothingEnabled = false;
 
-// Draw Player Character (Cute Y2K pastel explorer)
+// Draw Player Character (Cozy pastel adventurer)
 function drawPlayer(x, y, dir, frame, isMoving) {
   ctx.save();
   ctx.translate(Math.round(x), Math.round(y));
@@ -193,8 +197,8 @@ function drawPlayer(x, y, dir, frame, isMoving) {
 
   const bob = isMoving ? Math.sin(frame * 0.4) * 1.5 : 0;
 
-  // Legs / Boots
-  ctx.fillStyle = '#422040'; // Deep plum boots
+  // Boots
+  ctx.fillStyle = '#422040';
   if (dir === 'left' || dir === 'right') {
     const legOffset = isMoving ? Math.sin(frame * 0.4) * 3 : 0;
     ctx.fillRect(7 + legOffset, 21, 4, 6);
@@ -206,16 +210,15 @@ function drawPlayer(x, y, dir, frame, isMoving) {
     ctx.fillRect(12, 21 + legR, 4, 6);
   }
 
-  // Dress / Skirt (Cute Bubblegum Pink with cream lace)
+  // Pink skirt
   ctx.fillStyle = '#ff8ebb';
   ctx.fillRect(5, 14 + bob, 12, 8);
   ctx.fillStyle = '#fffcf2';
   ctx.fillRect(5, 21 + bob, 12, 2);
 
-  // Torso / Sweater (Pastel Lavender with Heart Brooch)
+  // Lavender sweater
   ctx.fillStyle = '#cdb4db';
   ctx.fillRect(6, 9 + bob, 10, 6);
-  // Heart
   ctx.fillStyle = '#ff4d6d';
   ctx.fillRect(10, 11 + bob, 2, 2);
 
@@ -230,34 +233,28 @@ function drawPlayer(x, y, dir, frame, isMoving) {
     ctx.fillRect(16, 10 + bob, 2, 5);
   }
 
-  // Head / Skin
+  // Head
   ctx.fillStyle = '#ffdfba';
   ctx.fillRect(6, 2 + bob, 10, 8);
 
-  // Hair (Warm Brown Bob with Y2K bangs & Pink clip)
+  // Hair
   ctx.fillStyle = '#7a4329';
   if (dir === 'up') {
-    // Back of head
     ctx.fillRect(5, 0 + bob, 12, 10);
-    // Hair clip
     ctx.fillStyle = '#ff659c';
     ctx.fillRect(13, 3 + bob, 3, 3);
   } else {
-    // Bangs & Sides
     ctx.fillRect(5, 0 + bob, 12, 4);
     ctx.fillRect(4, 3 + bob, 3, 6);
     ctx.fillRect(15, 3 + bob, 3, 6);
 
-    // Hair Ribbon / Clip
     ctx.fillStyle = '#ff659c';
     ctx.fillRect(13, 1 + bob, 3, 3);
 
-    // Eyes
     ctx.fillStyle = '#371b34';
     if (dir === 'down') {
       ctx.fillRect(8, 5 + bob, 2, 2);
       ctx.fillRect(12, 5 + bob, 2, 2);
-      // Soft Blush
       ctx.fillStyle = '#ff9ec7';
       ctx.fillRect(7, 7 + bob, 2, 1);
       ctx.fillRect(13, 7 + bob, 2, 1);
@@ -275,7 +272,7 @@ function drawPlayer(x, y, dir, frame, isMoving) {
   ctx.restore();
 }
 
-// Draw Companion Nihi (Magical bouncy pastel creature with 3 expressions)
+// Draw Companion Nihi (Cute pixel companion)
 function drawNihi(x, y, expression, floatAngle) {
   ctx.save();
   const floatOffset = Math.sin(floatAngle) * 3;
@@ -287,21 +284,21 @@ function drawNihi(x, y, expression, floatAngle) {
   ctx.ellipse(12, 22 - floatOffset, 9, 3, 0, 0, Math.PI * 2);
   ctx.fill();
 
-  // Little Sprout / Leaf Antenna
+  // Sprout
   ctx.fillStyle = '#7dbb84';
   ctx.fillRect(11, -4, 2, 5);
   ctx.beginPath();
   ctx.arc(14, -4, 3, 0, Math.PI * 2);
   ctx.fill();
 
-  // Fluffy Ears
+  // Ears
   ctx.fillStyle = '#ffc2d1';
   ctx.beginPath();
   ctx.ellipse(5, 3, 3, 5, -0.3, 0, Math.PI * 2);
   ctx.ellipse(19, 3, 3, 5, 0.3, 0, Math.PI * 2);
   ctx.fill();
 
-  // Body (Round, soft pearlescent cream-pink)
+  // Body
   ctx.fillStyle = '#ffe5ec';
   ctx.beginPath();
   ctx.arc(12, 11, 10, 0, Math.PI * 2);
@@ -310,68 +307,26 @@ function drawNihi(x, y, expression, floatAngle) {
   ctx.lineWidth = 1;
   ctx.stroke();
 
-  // Blushing cheeks
+  // Cheeks
   ctx.fillStyle = '#ff8fa3';
   ctx.fillRect(6, 12, 3, 2);
   ctx.fillRect(15, 12, 3, 2);
 
-  // Eyes & Expressions
+  // Eyes
   ctx.fillStyle = '#422040';
   if (expression === 'happy') {
-    // Happy crescent eyes ^ ^
     ctx.fillRect(8, 8, 2, 1);
     ctx.fillRect(9, 7, 1, 1);
     ctx.fillRect(14, 8, 2, 1);
     ctx.fillRect(15, 7, 1, 1);
-    // Cute smile
     ctx.fillRect(11, 12, 2, 2);
-    // Little sparkle nearby
-    ctx.fillStyle = '#ffd166';
-    ctx.fillRect(22, 0, 2, 2);
-  } else if (expression === 'thoughtful') {
-    // Large round curious eyes with gleam
-    ctx.fillRect(8, 7, 2, 3);
-    ctx.fillRect(14, 7, 2, 3);
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(8, 7, 1, 1);
-    ctx.fillRect(14, 7, 1, 1);
-    // Small dot mouth
-    ctx.fillStyle = '#422040';
-    ctx.fillRect(11, 12, 2, 1);
-  } else if (expression === 'concerned') {
-    // Soft worried eyes
+  } else {
     ctx.fillRect(8, 8, 3, 2);
     ctx.fillRect(13, 8, 3, 2);
-    // Lowered eyebrows
-    ctx.fillRect(7, 6, 3, 1);
-    ctx.fillRect(14, 6, 3, 1);
-    // Wavy soft mouth
     ctx.fillRect(10, 13, 4, 1);
   }
 
   ctx.restore();
-}
-
-// Draw Portrait for Dialogue Box
-function drawPortrait(expression) {
-  const pCanvas = document.getElementById('dialogue-portrait');
-  const pCtx = pCanvas.getContext('2d');
-  pCtx.clearRect(0, 0, 64, 64);
-  pCtx.imageSmoothingEnabled = false;
-
-  // Soft gradient backdrop
-  const grad = pCtx.createLinearGradient(0, 0, 0, 64);
-  grad.addColorStop(0, '#ffd6e0');
-  grad.addColorStop(1, '#cdb4db');
-  pCtx.fillStyle = grad;
-  pCtx.fillRect(0, 0, 64, 64);
-
-  // Big Nihi portrait
-  pCtx.save();
-  pCtx.translate(32, 36);
-  pCtx.scale(2.2, 2.2);
-  drawNihi(-12, -12, expression, 0);
-  pCtx.restore();
 }
 
 // Draw Tileset
@@ -381,18 +336,14 @@ function drawTile(col, row, type) {
 
   switch (type) {
     case TILE.GRASS:
-      // Soft sage pastel grass
       ctx.fillStyle = '#a6cfa8';
       ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
-      // Subtle grass detail
       ctx.fillStyle = '#97c299';
       ctx.fillRect(px + 6, py + 8, 2, 3);
       ctx.fillRect(px + 20, py + 18, 3, 2);
-      ctx.fillRect(px + 14, py + 24, 2, 2);
       break;
 
     case TILE.PATH:
-      // Warm cobblestone path
       ctx.fillStyle = '#f5e8d0';
       ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
       ctx.fillStyle = '#e6d3b4';
@@ -404,33 +355,25 @@ function drawTile(col, row, type) {
       break;
 
     case TILE.WATER:
-      // Shimmering baby blue pond
       ctx.fillStyle = '#8ecae6';
       ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
-      // Ripples
       const wave = Math.sin(Date.now() * 0.003 + col + row) * 2;
       ctx.fillStyle = '#bde0fe';
       ctx.fillRect(px + 4, py + 8 + wave, 10, 2);
       ctx.fillRect(px + 16, py + 20 - wave, 12, 2);
-      // Lily pad
       if ((col + row) % 2 === 0) {
         ctx.fillStyle = '#639366';
         ctx.beginPath();
         ctx.arc(px + 14, py + 14, 5, 0, Math.PI * 1.8);
         ctx.fill();
-        ctx.fillStyle = '#ff8ebb';
-        ctx.fillRect(px + 13, py + 13, 2, 2);
       }
       break;
 
     case TILE.TREE:
-      // Soft mystical sage trees
       ctx.fillStyle = '#a6cfa8';
       ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
-      // Trunk
       ctx.fillStyle = '#7a4931';
       ctx.fillRect(px + 12, py + 16, 8, 16);
-      // Foliage layers
       ctx.fillStyle = '#578e5c';
       ctx.beginPath();
       ctx.arc(px + 16, py + 12, 14, 0, Math.PI * 2);
@@ -448,24 +391,17 @@ function drawTile(col, row, type) {
       ctx.beginPath();
       ctx.ellipse(px + 16, py + 18, 12, 8, 0, 0, Math.PI * 2);
       ctx.fill();
-      ctx.fillStyle = '#c5c9ce';
-      ctx.beginPath();
-      ctx.ellipse(px + 14, py + 16, 7, 4, 0, 0, Math.PI * 2);
-      ctx.fill();
       break;
 
     case TILE.FLOWER_FADED:
-      // Before quest: faded, drooping flowers
       ctx.fillStyle = '#a6cfa8';
       ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
       if (state.quests.mirrorPcosDone) {
-        // In full bloom!
         drawBloomingFlowerTile(px, py, col, row);
       } else {
-        // Drooping faded blossom
         ctx.fillStyle = '#7a967c';
         ctx.fillRect(px + 15, py + 16, 2, 10);
-        ctx.fillStyle = '#c9b1bd'; // Faded lavender
+        ctx.fillStyle = '#c9b1bd';
         ctx.beginPath();
         ctx.arc(px + 14, py + 18, 5, 0, Math.PI * 2);
         ctx.fill();
@@ -473,40 +409,30 @@ function drawTile(col, row, type) {
       break;
 
     case TILE.MIRROR:
-      // The Shifting Ornate Mirror
       ctx.fillStyle = '#a6cfa8';
       ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
-      // Gilded stand
       ctx.fillStyle = '#ffd166';
       ctx.fillRect(px + 10, py + 22, 12, 8);
       ctx.fillRect(px + 8, py + 28, 16, 4);
-      // Mirror Frame
       ctx.fillStyle = '#e8b948';
       ctx.fillRect(px + 6, py + 2, 20, 22);
-      // Shifting glass reflection
       const shift = Math.sin(Date.now() * 0.002) * 0.5 + 0.5;
       const rGrad = ctx.createLinearGradient(px + 8, py + 4, px + 24, py + 22);
       rGrad.addColorStop(0, `rgba(255, 182, 193, ${0.7 + shift * 0.2})`);
-      rGrad.addColorStop(0.5, `rgba(205, 180, 219, ${0.7 + shift * 0.2})`);
       rGrad.addColorStop(1, `rgba(189, 224, 254, ${0.7 + shift * 0.2})`);
       ctx.fillStyle = rGrad;
       ctx.fillRect(px + 8, py + 4, 16, 18);
-      // Star gleam
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(px + 10, py + 6, 2, 2);
       break;
 
     case TILE.HOUSE:
-      // Lavender cottage
       ctx.fillStyle = '#a6cfa8';
       ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
-      // Walls
       ctx.fillStyle = '#d8b4e2';
       ctx.fillRect(px, py + 8, TILE_SIZE, TILE_SIZE - 8);
-      // Roof tiles
       ctx.fillStyle = '#ff758f';
       ctx.fillRect(px, py, TILE_SIZE, 8);
-      // Warm glowing window
       ctx.fillStyle = '#fff3a8';
       ctx.fillRect(px + 8, py + 14, 14, 12);
       ctx.fillStyle = '#52304d';
@@ -532,7 +458,6 @@ function drawTile(col, row, type) {
       ctx.strokeStyle = '#52304d';
       ctx.lineWidth = 2;
       ctx.stroke();
-      // Center water spout
       const spoutHeight = Math.sin(Date.now() * 0.006) * 3 + 6;
       ctx.fillStyle = '#ffffff';
       ctx.fillRect(px + 15, py + 16 - spoutHeight, 3, spoutHeight);
@@ -540,15 +465,11 @@ function drawTile(col, row, type) {
   }
 }
 
-// Blooming Flower Garden Tile (When quests complete)
 function drawBloomingFlowerTile(px, py, col, row) {
-  // Stem & Leaves
   ctx.fillStyle = '#4f8553';
   ctx.fillRect(px + 15, py + 14, 2, 14);
   ctx.fillRect(px + 11, py + 20, 5, 2);
-  ctx.fillRect(px + 17, py + 18, 5, 2);
 
-  // Vibrant Blossom (Pink / Rose / Butter Yellow)
   const flowerColor = (col + row) % 2 === 0 ? '#ff659c' : '#ffd166';
   ctx.fillStyle = flowerColor;
   ctx.beginPath();
@@ -559,26 +480,22 @@ function drawBloomingFlowerTile(px, py, col, row) {
   ctx.arc(px + 16, py + 11, 3, 0, Math.PI * 2);
   ctx.fill();
 
-  // Floating sparkle chance
-  if (Math.random() < 0.04) {
+  if (Math.random() < 0.03) {
     addSparkle(px + 10 + Math.random() * 12, py + 6 + Math.random() * 8, flowerColor);
   }
 }
 
-// Draw Floating Collectibles
 function drawCollectible(item) {
   if (item.collected) return;
   const px = item.tileX * TILE_SIZE;
   const py = item.tileY * TILE_SIZE;
   const bob = Math.sin(Date.now() * 0.005 + item.tileX) * 4;
 
-  // Glowing halo
   ctx.fillStyle = 'rgba(255, 255, 255, 0.45)';
   ctx.beginPath();
   ctx.arc(px + 16, py + 16 + bob, 14, 0, Math.PI * 2);
   ctx.fill();
 
-  // Item icon background
   ctx.fillStyle = item.color;
   ctx.beginPath();
   ctx.arc(px + 16, py + 16 + bob, 9, 0, Math.PI * 2);
@@ -587,12 +504,10 @@ function drawCollectible(item) {
   ctx.lineWidth = 1.5;
   ctx.stroke();
 
-  // Cute item glint
   ctx.fillStyle = '#ffffff';
   ctx.fillRect(px + 13, py + 13 + bob, 3, 3);
 }
 
-// Particle System
 function addSparkle(x, y, color = '#ffd166') {
   state.particles.push({
     x: x,
@@ -626,7 +541,6 @@ function updateAndDrawParticles() {
   }
 }
 
-// Dynamic Fog Shader for the Foggy Forest
 function drawFoggyForestOverlay() {
   if (state.quests.fogDissolved >= 1.0) return;
 
@@ -634,7 +548,6 @@ function drawFoggyForestOverlay() {
   const time = Date.now() * 0.001;
 
   ctx.save();
-  // Fog covers the right side: columns 15 to 19
   const fogStartX = 14 * TILE_SIZE;
   const fogWidth = CANVAS_WIDTH - fogStartX;
 
@@ -646,15 +559,11 @@ function drawFoggyForestOverlay() {
   ctx.fillStyle = fogGrad;
   ctx.fillRect(fogStartX - 20, 0, fogWidth + 20, CANVAS_HEIGHT);
 
-  // Swirling mist clouds
   ctx.fillStyle = `rgba(255, 255, 255, ${0.35 * fogStrength})`;
   for (let y = 0; y < CANVAS_HEIGHT; y += 40) {
     const driftX = Math.sin(time + y * 0.1) * 16;
     ctx.beginPath();
     ctx.ellipse(fogStartX + 50 + driftX, y + 20, 60, 24, 0, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.beginPath();
-    ctx.ellipse(fogStartX + 120 - driftX, y + 30, 50, 20, 0, 0, Math.PI * 2);
     ctx.fill();
   }
   ctx.restore();
@@ -668,7 +577,6 @@ function isSolidTile(tileCol, tileRow) {
     return true;
   }
   const tile = defaultMap[tileRow][tileCol];
-  // Solid obstacles: Tree, Rock, Water, Mirror, House
   return (
     tile === TILE.TREE ||
     tile === TILE.ROCK ||
@@ -679,7 +587,6 @@ function isSolidTile(tileCol, tileRow) {
 }
 
 function checkObstacleCollision(newX, newY) {
-  // Player bounding box (inset for natural depth)
   const boxLeft = newX + 4;
   const boxRight = newX + state.player.width - 4;
   const boxTop = newY + 14;
@@ -692,9 +599,7 @@ function checkObstacleCollision(newX, newY) {
 
   for (let r = topRow; r <= bottomRow; r++) {
     for (let c = leftCol; c <= rightCol; c++) {
-      if (isSolidTile(c, r)) {
-        return true;
-      }
+      if (isSolidTile(c, r)) return true;
     }
   }
   return false;
@@ -726,7 +631,6 @@ function updatePlayerMovement() {
     state.player.dir = 'right';
   }
 
-  // Normalize diagonal speed
   if (dx !== 0 && dy !== 0) {
     dx *= 0.7071;
     dy *= 0.7071;
@@ -741,27 +645,22 @@ function updatePlayerMovement() {
     }
     state.player.frame++;
 
-    // Try horizontal move
     if (dx !== 0 && !checkObstacleCollision(state.player.x + dx, state.player.y)) {
       state.player.x += dx;
     }
-    // Try vertical move
     if (dy !== 0 && !checkObstacleCollision(state.player.x, state.player.y + dy)) {
       state.player.y += dy;
     }
   }
 
-  // Keep player inside map boundaries
   state.player.x = Math.max(TILE_SIZE, Math.min(state.player.x, (MAP_COLS - 2) * TILE_SIZE));
   state.player.y = Math.max(TILE_SIZE, Math.min(state.player.y, (MAP_ROWS - 2) * TILE_SIZE));
 }
 
-// Update Companion Nihi AI (Smooth following with playful offset)
 function updateNihiAI() {
   state.nihi.floatAngle += 0.04;
 
   if (state.screen === 'playing') {
-    // Nihi hovers slightly behind the player based on direction
     let offsetX = -24;
     let offsetY = -8;
     if (state.player.dir === 'left') offsetX = 28;
@@ -772,7 +671,6 @@ function updateNihiAI() {
     state.nihi.targetX = state.player.x + offsetX;
     state.nihi.targetY = state.player.y + offsetY;
 
-    // Smooth lerp towards target
     const distX = state.nihi.targetX - state.nihi.x;
     const distY = state.nihi.targetY - state.nihi.y;
     const dist = Math.hypot(distX, distY);
@@ -784,12 +682,11 @@ function updateNihiAI() {
   }
 }
 
-// Check Collectibles Proximity
 function checkCollectiblesPickup() {
   const playerCenterX = state.player.x + state.player.width / 2;
   const playerCenterY = state.player.y + state.player.height / 2;
 
-  floraCollectibles.forEach((item, index) => {
+  floraCollectibles.forEach(item => {
     if (item.collected) return;
     const itemCenterX = item.tileX * TILE_SIZE + TILE_SIZE / 2;
     const itemCenterY = item.tileY * TILE_SIZE + TILE_SIZE / 2;
@@ -800,7 +697,6 @@ function checkCollectiblesPickup() {
       state.inventory.items.push(item);
       window.soundEngine.playPickup();
 
-      // Burst sparkles
       for (let s = 0; s < 12; s++) {
         addSparkle(itemCenterX, itemCenterY, item.color);
       }
@@ -811,7 +707,6 @@ function checkCollectiblesPickup() {
   });
 }
 
-// Check Nearby Interactables & Prompt
 function updateInteractables() {
   const pCol = Math.floor((state.player.x + state.player.width / 2) / TILE_SIZE);
   const pRow = Math.floor((state.player.y + state.player.height / 2) / TILE_SIZE);
@@ -825,7 +720,6 @@ function updateInteractables() {
     }
   }
 
-  // Also check if near Nihi
   const nihiCol = Math.floor(state.nihi.x / TILE_SIZE);
   const nihiRow = Math.floor(state.nihi.y / TILE_SIZE);
   if (!found && Math.abs(pCol - nihiCol) + Math.abs(pRow - nihiRow) <= 1.5) {
@@ -849,24 +743,33 @@ function updateInteractables() {
 }
 
 // ============================================================================
-// 6. DIALOGUE & INTERACTIVE STORYLINE SYSTEM
+// 6. DIALOGUE SYSTEM WITH REAL PIXEL ART PORTRAITS
 // ============================================================================
 const dialogueEl = document.getElementById('dialogue-box');
 const dialogueTextEl = document.getElementById('dialogue-text');
 const dialogueChoicesEl = document.getElementById('dialogue-choices');
 const speakerTagEl = document.getElementById('speaker-name');
+const portraitImgEl = document.getElementById('dialogue-portrait-img');
 
-let currentDialogueTree = null;
-let currentDialogueNode = null;
+function setPortraitImage(speaker, expression = 'happy') {
+  if (speaker === 'Saffron') {
+    portraitImgEl.src = 'assets/portrait_saffron.jpg';
+  } else if (speaker === 'Maya') {
+    portraitImgEl.src = 'assets/portrait_maya.jpg';
+  } else if (expression === 'concerned') {
+    portraitImgEl.src = 'assets/nihi_concerned.jpg';
+  } else {
+    portraitImgEl.src = 'assets/nihi_happy.jpg';
+  }
+}
 
-function showDialogue(node, speaker = 'Nihi', expression = 'thoughtful') {
+function showDialogue(node, speaker = 'Nihi', expression = 'happy') {
   state.screen = 'dialogue';
   dialogueEl.classList.remove('hidden');
   speakerTagEl.textContent = speaker;
-  drawPortrait(expression);
+  setPortraitImage(speaker, expression);
   state.nihi.expression = expression;
 
-  currentDialogueNode = node;
   dialogueTextEl.textContent = node.text;
   dialogueChoicesEl.innerHTML = '';
 
@@ -891,7 +794,7 @@ function showDialogue(node, speaker = 'Nihi', expression = 'thoughtful') {
   } else {
     const btn = document.createElement('button');
     btn.className = 'dialogue-choice-btn';
-    btn.textContent = 'Continue (Press Space or Click) 🌸';
+    btn.textContent = 'Continue 🌸';
     btn.onclick = () => {
       window.soundEngine.playSelect();
       if (node.onEnd) node.onEnd();
@@ -909,17 +812,16 @@ function closeDialogue() {
 }
 
 function showItemPickupDialogue(item) {
-  state.nihi.expression = 'happy';
   showDialogue(
     {
-      text: `Found ${item.name}! "${item.lore}"`,
+      text: `You found the ${item.name}! "${item.lore}"`,
       choices: [
         {
-          text: 'Place gently in pocket ✨',
+          text: 'Tuck it into your pocket ✨',
           action: () => {
             if (state.inventory.items.length >= 3 && state.quests.current === 'collect_flora') {
               state.quests.current = 'mirror_pcos';
-              updateQuestHUD('Visit the Shifting Mirror', 'Take your 3 gathered flora to the ornate mirror.');
+              updateQuestHUD('Visit Saffron at the Mirror', 'Take your 3 gathered flora to the northwest grove.');
             }
           }
         }
@@ -930,39 +832,39 @@ function showItemPickupDialogue(item) {
   );
 }
 
-// Meet Nihi Initial Intro
+// Punchy, natural, cozy intro dialogue
 function startIntroDialogue() {
   showDialogue(
     {
-      text: 'Nihi looks up with curious eyes: "Hello, traveler! The garden has felt so quiet lately... some flowers have faded and the paths feel heavy. Will you help me explore and listen to what the garden is saying?"',
+      text: '"Oh, hey! You can see me? The garden has felt so quiet and faded lately. Will you walk with me and help wake it up?"',
       choices: [
         {
           text: '"I\'d love to walk with you, Nihi."',
           expression: 'happy',
           next: {
-            text: 'Nihi sparkles: "Thank you! Let\'s begin by exploring the garden paths and collecting 3 special flora sprouts scattered around."',
+            text: '"Yay! Let\'s start by finding 3 little flora sprouts along the stone paths. They\'re scattered around the fountain and corners."',
             choices: [
               {
-                text: '"Let\'s look around!"',
+                text: '"Let\'s go find them!"',
                 action: () => {
                   state.quests.current = 'collect_flora';
-                  updateQuestHUD('Collect 3 Garden Flora', 'Search the garden for the Dewdrop, Chamomile & Sunstone sprouts.');
+                  updateQuestHUD('Find 3 Garden Flora', 'Search along the stone paths and pond edges.');
                 }
               }
             ]
           }
         },
         {
-          text: '"What do you mean by \'listening\'?"',
-          expression: 'thoughtful',
+          text: '"Why did the flowers fade?"',
+          expression: 'concerned',
           next: {
-            text: 'Nihi nods gently: "Our bodies and feelings are always sending quiet signals. Sometimes we ignore them or judge ourselves. Here, we practice listening with patience."',
+            text: '"People got so used to ignoring when they were tired or hurting. When we stop listening to our bodies, the flowers wilt too."',
             choices: [
               {
-                text: '"That sounds like a relief. Let\'s explore."',
+                text: '"That makes total sense. Let\'s explore."',
                 action: () => {
                   state.quests.current = 'collect_flora';
-                  updateQuestHUD('Collect 3 Garden Flora', 'Search the garden for the Dewdrop, Chamomile & Sunstone sprouts.');
+                  updateQuestHUD('Find 3 Garden Flora', 'Search along the stone paths and pond edges.');
                 }
               }
             ]
@@ -971,20 +873,18 @@ function startIntroDialogue() {
       ]
     },
     'Nihi',
-    'thoughtful'
+    'happy'
   );
 }
 
-// Direct Talk with Nihi
 function handleNihiDirectDialogue() {
   if (state.quests.current === 'meet_nihi') {
     startIntroDialogue();
   } else if (state.quests.current === 'collect_flora') {
-    const left = 3 - state.inventory.items.length;
     showDialogue(
       {
-        text: `Nihi checks your pocket: "You've gathered ${state.inventory.items.length}/3 flora! Look around the stone paths and quiet corners. Take your time, there is no rush at all."`,
-        choices: [{ text: '"I\'ll keep looking!"' }]
+        text: `"You've found ${state.inventory.items.length}/3 sprouts so far! Check near the blue pond and stone corners. Zero rush!"`,
+        choices: [{ text: '"Got it, looking around!"' }]
       },
       'Nihi',
       'happy'
@@ -992,17 +892,17 @@ function handleNihiDirectDialogue() {
   } else if (state.quests.current === 'mirror_pcos') {
     showDialogue(
       {
-        text: 'Nihi looks toward the ornate glass: "The Shifting Mirror in the northwest grove is shimmering. It seems to reflect our feelings about our bodies."',
-        choices: [{ text: '"Let\'s visit the mirror."' }]
+        text: '"Saffron is waiting by the Shifting Mirror in the top-left grove. She looks like she could really use a friendly chat."',
+        choices: [{ text: '"Let\'s head over to Saffron."' }]
       },
       'Nihi',
-      'thoughtful'
+      'happy'
     );
   } else if (state.quests.current === 'postpartum_house') {
     showDialogue(
       {
-        text: 'Nihi looks toward the lavender cottage: "The porch of the Tired Moon looks so cozy, yet so tired. Let\'s check in on the new parent resting there."',
-        choices: [{ text: '"Let\'s head over gently."' }]
+        text: '"Maya is over on the lavender cottage porch. She just put the baby down and looks completely exhausted."',
+        choices: [{ text: '"Let\'s check in on Maya."' }]
       },
       'Nihi',
       'concerned'
@@ -1010,8 +910,8 @@ function handleNihiDirectDialogue() {
   } else if (state.quests.current === 'foggy_forest') {
     showDialogue(
       {
-        text: 'Nihi gently holds your hand: "The eastern forest is wrapped in mist. My chest feels a little fluttery... but we can do a grounding breath together."',
-        choices: [{ text: '"We\'re in this together, Nihi."' }]
+        text: '"The eastern woods are covered in fog. My heart is beating a little fast... but we can do a calm breath together."',
+        choices: [{ text: '"We\'ve got this, Nihi."' }]
       },
       'Nihi',
       'concerned'
@@ -1019,8 +919,8 @@ function handleNihiDirectDialogue() {
   } else {
     showDialogue(
       {
-        text: 'Nihi beams with warmth: "The entire garden is bleuming! Thank you for reminding everyone that you don\'t have to be like anyone else to deserve care."',
-        choices: [{ text: '"I\'m so glad we did this, Nihi."' }]
+        text: '"Look around—the whole garden is bleuming! Thanks for being so kind to everyone today."',
+        choices: [{ text: '"I\'m so proud of our garden."' }]
       },
       'Nihi',
       'happy'
@@ -1029,267 +929,206 @@ function handleNihiDirectDialogue() {
 }
 
 // ============================================================================
-// 7. HEALTH-RELATED STORY EXPERIENCES
+// 7. DEDICATED EXPERIENCE 1: SAFFRON & THE PCOS/PCOD SANCTUARY
 // ============================================================================
-
-// ----------------------------------------------------------------------------
-// EXPERIENCE A: The Changing Garden — PCOS / Hormonal Awareness
-// ----------------------------------------------------------------------------
 function handleMirrorInteraction() {
   if (state.quests.current === 'collect_flora') {
     showDialogue(
       {
-        text: 'The ornate mirror reflects soft, hazy waves. Nihi whispers: "The mirror is dormant right now. It looks like it will awaken once we gather 3 healing flora from the garden paths!"',
-        choices: [{ text: '"Understood! Let\'s collect the flora first."' }]
+        text: 'The Shifting Mirror is asleep. Nihi taps your shoulder: "Let\'s find all 3 flora sprouts first to awaken the mirror!"',
+        choices: [{ text: '"Right, let\'s finish collecting!"' }]
       },
       'Shifting Mirror',
-      'thoughtful'
+      'concerned'
     );
     return;
   }
 
   if (state.quests.mirrorPcosDone) {
-    showDialogue(
-      {
-        text: 'The mirror shines with clear, peaceful light. Roses bloom around its frame. "You helped someone replace harsh self-criticism with patient, practical doctor questions."',
-        choices: [{ text: 'Gaze into the clear reflection ✨' }]
-      },
-      'Shifting Mirror',
-      'happy'
-    );
+    // Re-open PCOS Hub anytime
+    openPcosHubModal();
     return;
   }
 
-  // Active PCOS Quest Scene
+  // Active PCOS Dialogue (Natural, human, zero AI therapy slop)
   showDialogue(
     {
-      text: 'As you place the 3 flora near the mirror, the glass reflects a troubled garden spirit looking frustrated: "My body keeps shifting... unpredictable cycles, sudden exhaustion, skin flare-ups. I keep comparing myself to others and feeling like my body is broken."',
+      text: '"Hey... sorry, I was just staring at this mirror. Some months my cycle just vanishes, my skin breaks out, and I\'m exhausted by noon. Then people tell me to \'just drink spearmint tea\' and it makes me want to scream."',
+      speaker: 'Saffron',
       choices: [
         {
-          text: '"Your body isn\'t broken; it is sending you signals."',
-          expression: 'thoughtful',
+          text: '"That unsolicited advice is so frustrating. Your symptoms are medical, not a failure."',
+          expression: 'happy',
           next: {
-            text: 'The spirit breathes deeply: "Really? It feels so lonely when everyone acts like their cycles and energy are effortless clockwork."',
+            text: '"Right?! People act like our bodies are predictable clockwork, but PCOS affects insulin, hormones, everything. I want to talk to my doctor, but I always freeze up in the clinic."',
+            speaker: 'Saffron',
             choices: [
               {
-                text: '"PCOS and hormonal rhythms are diverse. No two bodies are identical."',
-                expression: 'happy',
-                next: {
-                  text: 'The spirit nods with relief: "I want to speak with a healthcare provider, but I always freeze and don\'t know what to ask. Could you help me prepare a question card?"',
-                  choices: [
-                    {
-                      text: '✨ Help prepare Doctor Visit Questions ✨',
-                      action: () => openDoctorQuestionsModal()
-                    }
-                  ]
-                }
+                text: '"Let\'s write down the exact lab tests & questions so you feel totally ready."',
+                action: () => openPcosHubModal()
               }
             ]
           }
         },
         {
-          text: '"It\'s completely understandable to feel frustrated when changes happen."',
+          text: '"It\'s completely valid to feel fed up when your body feels unpredictable."',
           expression: 'concerned',
           next: {
-            text: 'The spirit looks relieved: "Thank you for validating that. Sometimes people give superficial advice like \'just drink green tea\', which makes me feel unheard."',
+            text: '"Thank you. It feels so isolating when you\'re constantly second-guessing your own fatigue. Can we build a clean doctor visit card together?"',
+            speaker: 'Saffron',
             choices: [
               {
-                text: '"Real medical support starts with taking your real symptoms seriously."',
-                next: {
-                  text: 'The spirit smiles softly: "Can we prepare a list of clear, neutral questions to bring to my doctor?"',
-                  choices: [
-                    {
-                      text: '✨ Open Doctor Visit Question Builder ✨',
-                      action: () => openDoctorQuestionsModal()
-                    }
-                  ]
-                }
+                text: '🌸 Open PCOS Care Hub & Doctor Prep',
+                action: () => openPcosHubModal()
               }
             ]
           }
         }
       ]
     },
-    'Garden Spirit',
+    'Saffron',
     'concerned'
   );
 }
 
-// Doctor Questions Mini-Game Modal Setup
-const pcosQuestionsPool = [
-  {
-    id: 'cycle',
-    title: 'Irregular Rhythm & Cycle Timing',
-    desc: '"Could we investigate hormonal panels or ultrasound to understand why my cycles fluctuate?"'
-  },
-  {
-    id: 'fatigue',
-    title: 'Persistent Energy Dips & Insulin Sensitivity',
-    desc: '"I notice deep fatigue after meals. Could we evaluate metabolic markers or glucose response?"'
-  },
-  {
-    id: 'skin_hair',
-    title: 'Androgen Signals (Acne & Hair Changes)',
-    desc: '"Are there hormonal or dermatological treatments suited specifically for my androgen levels?"'
-  },
-  {
-    id: 'tracking',
-    title: 'Effective Symptom Tracking Without Stress',
-    desc: '"What specific 3 signals should I log over 2 months that will be most useful for our next visit?"'
-  }
-];
-
-let selectedQuestionIds = [];
-
-function openDoctorQuestionsModal() {
+function openPcosHubModal() {
   state.screen = 'modal';
-  const modal = document.getElementById('modal-questions');
+  const modal = document.getElementById('modal-pcos-hub');
   modal.classList.remove('hidden');
 
-  selectedQuestionIds = [];
-  const container = document.getElementById('questions-checklist');
-  container.innerHTML = '';
+  setupPcosHubTabs();
+  updatePcosGeneratedQuestions();
+}
 
-  pcosQuestionsPool.forEach(q => {
-    const item = document.createElement('div');
-    item.className = 'question-check-item';
-    item.dataset.id = q.id;
-    item.innerHTML = `
-      <div class="question-check-box"></div>
-      <div class="question-text-group">
-        <div class="question-text-title">${q.title}</div>
-        <div class="question-text-desc">${q.desc}</div>
-      </div>
-    `;
-    item.onclick = () => toggleQuestionPick(q.id, item);
-    container.appendChild(item);
+function setupPcosHubTabs() {
+  const tabs = document.querySelectorAll('#modal-pcos-hub .hub-tab');
+  tabs.forEach(tab => {
+    tab.onclick = () => {
+      window.soundEngine.playSelect();
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      const targetId = tab.dataset.tab;
+      document.querySelectorAll('#modal-pcos-hub .hub-tab-pane').forEach(p => p.classList.remove('active'));
+      const pane = document.getElementById(targetId);
+      if (pane) pane.classList.add('active');
+    };
   });
 
-  updateQuestionSaveButton();
+  const checkboxes = document.querySelectorAll('#pcos-symptom-checklist input');
+  checkboxes.forEach(cb => {
+    cb.onchange = () => {
+      window.soundEngine.playSelect();
+      updatePcosGeneratedQuestions();
+    };
+  });
 }
 
-function toggleQuestionPick(id, el) {
-  window.soundEngine.playSelect();
-  if (selectedQuestionIds.includes(id)) {
-    selectedQuestionIds = selectedQuestionIds.filter(x => x !== id);
-    el.classList.remove('selected');
-    el.querySelector('.question-check-box').textContent = '';
-  } else {
-    if (selectedQuestionIds.length < 3) {
-      selectedQuestionIds.push(id);
-      el.classList.add('selected');
-      el.querySelector('.question-check-box').textContent = '✓';
-    }
+function updatePcosGeneratedQuestions() {
+  const list = document.getElementById('pcos-generated-questions');
+  const checked = document.querySelectorAll('#pcos-symptom-checklist input:checked');
+  list.innerHTML = '';
+  state.savedPcosQuestions = [];
+
+  checked.forEach(cb => {
+    const parentText = cb.parentElement.querySelector('span').textContent;
+    const quote = parentText.split(':')[1]?.trim() || parentText;
+    state.savedPcosQuestions.push(quote);
+    const li = document.createElement('li');
+    li.textContent = quote;
+    list.appendChild(li);
+  });
+
+  if (checked.length === 0) {
+    list.innerHTML = '<li><em>Select at least one symptom on the checklist tab!</em></li>';
   }
-  updateQuestionSaveButton();
-}
-
-function updateQuestionSaveButton() {
-  const btn = document.getElementById('btn-save-questions');
-  const count = document.getElementById('question-pick-count');
-  count.textContent = `${selectedQuestionIds.length}/3 Selected`;
-  btn.disabled = (selectedQuestionIds.length < 2);
 }
 
 function completePcosQuest() {
-  document.getElementById('modal-questions').classList.add('hidden');
+  document.getElementById('modal-pcos-hub').classList.add('hidden');
   state.quests.mirrorPcosDone = true;
   state.quests.current = 'postpartum_house';
 
-  // Save selected questions into Journal
-  state.savedQuestions = selectedQuestionIds.map(id => pcosQuestionsPool.find(q => q.id === id));
-  renderSavedQuestionsInJournal();
-
   window.soundEngine.playBloomFanfare();
 
-  // Burst flowers and sparkles!
-  for (let i = 0; i < 30; i++) {
+  // Flowers burst into bloom!
+  for (let i = 0; i < 35; i++) {
     addSparkle(3 * TILE_SIZE + Math.random() * 64, 3 * TILE_SIZE + Math.random() * 64, '#ff659c');
   }
 
   showDialogue(
     {
-      text: 'The Shifting Mirror glows with soft pastel clarity! Surrounding flower beds burst into radiant pink and rose blossoms. The spirit beams: "Having my questions written down makes me feel ready and respected. Thank you!"',
+      text: '"Look at that—roses are blooming around the mirror! Having my questions written down makes me feel so much calmer about my doctor visit. Thank you!"',
+      speaker: 'Saffron',
       choices: [
         {
-          text: '"You deserve answers without guilt. Take good care!"',
+          text: '"You\'ve got this, Saffron. Take good care!"',
           action: () => {
             updateQuestHUD(
-              'Visit the Porch of the Tired Moon',
-              'Walk southeast to the cozy lavender cottage with the warm lantern.'
+              'Visit Maya at the Cottage Porch',
+              'Head southeast to the cottage veranda where a new parent is resting.'
             );
           }
         }
       ]
     },
-    'Garden Spirit',
+    'Saffron',
     'happy'
   );
 }
 
-// ----------------------------------------------------------------------------
-// EXPERIENCE B: The Tired Moon — Postpartum Wellbeing
-// ----------------------------------------------------------------------------
+// ============================================================================
+// 8. DEDICATED EXPERIENCE 2: MAYA & POSTPARTUM DEPRESSION
+// ============================================================================
 function handleHouseInteraction() {
   if (!state.quests.mirrorPcosDone) {
     showDialogue(
       {
-        text: 'The cottage porch has a soft rocking chair and a sleeping nursery chime. "A new mother is resting inside. Let\'s attend to the Shifting Mirror first before stopping by."',
-        choices: [{ text: '"Let\'s visit the mirror first."' }]
+        text: 'The cottage porch is quiet. Nihi whispers: "Maya is resting with the baby right now. Let\'s check in on Saffron at the mirror first!"',
+        choices: [{ text: '"Let\'s visit Saffron first."' }]
       },
-      'Porch of Tired Moon',
-      'thoughtful'
+      'Cottage Porch',
+      'concerned'
     );
     return;
   }
 
   if (state.quests.postpartumDone) {
-    showDialogue(
-      {
-        text: 'The cottage window glows with warm golden light. A small cup of chamomile tea rests on the veranda table beside a warm note: "Thank you for reminding me that asking for help is an act of love."',
-        choices: [{ text: 'Smile at the peaceful cottage 💖' }]
-      },
-      'Porch of Tired Moon',
-      'happy'
-    );
+    // Re-open Postpartum Hub anytime
+    openPostpartumHubModal();
     return;
   }
 
-  // Active Postpartum Scene
+  // Active Postpartum Scene (Human, raw, empathetic)
   showDialogue(
     {
-      text: 'On the porch, a new parent named Maya sits with tired eyes and a soft rocking crib: "Everyone tells me this should be the happiest time of my life... but I feel overwhelmed, exhausted, and sometimes an empty sadness I can\'t explain. I feel so guilty for struggling."',
+      text: '"Hi... shh, the baby just fell asleep. Honestly? I\'m hanging on by a thread. Everyone tells me \'cherish every second!\', but I cried for two hours in the bathroom this morning. I feel like such an awful mother."',
+      speaker: 'Maya',
       choices: [
         {
-          text: '"Postpartum depression and overwhelm are medical realities, not personal failures."',
+          text: '"Postpartum depression is a medical hormonal drop, Maya. It has zero to do with your love."',
           expression: 'concerned',
           next: {
-            text: 'Maya looks up, eyes tearing up with relief: "I was terrified that feeling this way meant I was a bad mother. Hearing that it\'s medical and treatable lifts a huge boulder off my shoulders."',
+            text: '"Hearing that made my shoulders drop an inch. I was terrified that admitting this meant I was failing. Friends keep texting \'let me know if you need anything\', but I don\'t even know what to ask."',
+            speaker: 'Maya',
             choices: [
               {
-                text: '"Caregivers deserve care too. Reaching out is protective, not weak."',
-                next: {
-                  text: 'Maya touches her phone hesitantly: "My partner and family keep saying \'let me know if you need anything\', but I never know what to text without feeling burdensome. Could you help me draft a simple message?"',
-                  choices: [
-                    {
-                      text: '💌 Help draft a gentle support message',
-                      action: () => openPostpartumModal()
-                    }
-                  ]
-                }
+                text: '💌 Open Maternal Care Hub & Task Delegation Board',
+                action: () => openPostpartumHubModal()
               }
             ]
           }
         },
         {
-          text: '"You are carrying so much right now. Your feelings deserve warmth and listening."',
-          expression: 'thoughtful',
+          text: '"You are carrying an enormous physical & emotional weight alone. That is too much."',
+          expression: 'happy',
           next: {
-            text: 'Maya breathes: "Thank you. Sleep deprivation combined with hormone shifts has made everything so fragile. I want to ask for support today."',
+            text: '"It really is. Sleep deprivation makes every thought feel like an avalanche. Let\'s pick two real things someone can do for me today."',
+            speaker: 'Maya',
             choices: [
               {
-                text: '💌 Open Support Message Builder',
-                action: () => openPostpartumModal()
+                text: '💌 Build Maya\'s Support Request',
+                action: () => openPostpartumHubModal()
               }
             ]
           }
@@ -1301,72 +1140,84 @@ function handleHouseInteraction() {
   );
 }
 
-const postpartumPresets = [
-  {
-    id: 'practical',
-    title: 'Tangible Household Help',
-    text: '"Hi! Things have felt really heavy and exhausting today. Could someone drop off a warm meal or watch the baby for an hour so I can take a shower and rest?"'
-  },
-  {
-    id: 'emotional',
-    title: 'Quiet Emotional Check-in',
-    text: '"Hi... I\'m having a hard time emotionally right now. I don\'t need advice, just a trusted friend to sit with me and listen without judgment."'
-  },
-  {
-    id: 'doctor',
-    title: 'Scheduling Medical / Postpartum Check',
-    text: '"Hello clinic, I would like to schedule a postpartum follow-up to discuss emotional wellbeing and postpartum depression screening with my doctor."'
-  }
-];
-
-function openPostpartumModal() {
+function openPostpartumHubModal() {
   state.screen = 'modal';
-  const modal = document.getElementById('modal-postpartum');
+  const modal = document.getElementById('modal-postpartum-hub');
   modal.classList.remove('hidden');
 
-  const container = document.getElementById('message-presets');
-  container.innerHTML = '';
+  setupPostpartumHubTabs();
+}
 
-  postpartumPresets.forEach((p, idx) => {
-    const btn = document.createElement('button');
-    btn.className = `msg-preset-btn ${idx === 0 ? 'active' : ''}`;
-    btn.textContent = p.title;
-    btn.onclick = () => {
+function setupPostpartumHubTabs() {
+  const tabs = document.querySelectorAll('#modal-postpartum-hub .hub-tab');
+  tabs.forEach(tab => {
+    tab.onclick = () => {
       window.soundEngine.playSelect();
-      container.querySelectorAll('.msg-preset-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      document.getElementById('message-preview-text').textContent = p.text;
-      state.selectedSupportMessage = p.text;
+      tabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+
+      const targetId = tab.dataset.tab;
+      document.querySelectorAll('#modal-postpartum-hub .hub-tab-pane').forEach(p => p.classList.remove('active'));
+      const pane = document.getElementById(targetId);
+      if (pane) pane.classList.add('active');
     };
-    container.appendChild(btn);
   });
 
-  state.selectedSupportMessage = postpartumPresets[0].text;
-  document.getElementById('message-preview-text').textContent = postpartumPresets[0].text;
+  const chips = document.querySelectorAll('#delegation-board .delegate-chip');
+  chips.forEach(chip => {
+    chip.onclick = () => {
+      window.soundEngine.playSelect();
+      chip.classList.toggle('selected');
+      updatePpdPreviewText();
+    };
+  });
+
+  updatePpdPreviewText();
+}
+
+function updatePpdPreviewText() {
+  const selected = document.querySelectorAll('#delegation-board .delegate-chip.selected');
+  const preview = document.getElementById('ppd-message-preview');
+  state.savedPpdTasks = [];
+
+  if (selected.length === 0) {
+    preview.textContent = '"Hey! I could use some support today—could we talk soon?"';
+    return;
+  }
+
+  const tasks = [];
+  selected.forEach(c => {
+    const text = c.dataset.text;
+    tasks.push(text);
+    state.savedPpdTasks.push(text);
+  });
+
+  preview.textContent = `"Hey! Things have been really heavy and exhausting today. Could you help with: ${tasks.join(' And: ')}? It would mean the world."`;
 }
 
 function completePostpartumQuest() {
-  document.getElementById('modal-postpartum').classList.add('hidden');
+  document.getElementById('modal-postpartum-hub').classList.add('hidden');
   state.quests.postpartumDone = true;
   state.quests.current = 'foggy_forest';
 
   window.soundEngine.playBloomFanfare();
 
-  // Burst floating hearts
-  for (let h = 0; h < 16; h++) {
+  // Floating hearts around the cottage
+  for (let h = 0; h < 20; h++) {
     addSparkle(13 * TILE_SIZE + Math.random() * 40, 4 * TILE_SIZE + Math.random() * 30, '#ff4d6d');
   }
 
   showDialogue(
     {
-      text: 'Maya smiles softly as the message is sent: "A friend just replied with so much love—they\'re bringing dinner and taking the evening shift. Thank you for reminding me that I am allowed to be cared for."',
+      text: '"A friend just replied—she\'s bringing a warm soup and watching the crib while I sleep! Thank you for reminding me that asking for help protects both of us."',
+      speaker: 'Maya',
       choices: [
         {
-          text: '"You are doing wonderfully. Rest gently, Maya."',
+          text: '"Sleep well, Maya. You are doing great."',
           action: () => {
             updateQuestHUD(
-              'Journey to the Foggy Forest',
-              'Head east into the misty woods to help Nihi navigate emotional overwhelm.'
+              'Explore the Misty Thicket',
+              'Head east into the foggy woods with Nihi.'
             );
           }
         }
@@ -1377,68 +1228,52 @@ function completePostpartumQuest() {
   );
 }
 
-// ----------------------------------------------------------------------------
-// EXPERIENCE C: The Foggy Forest — Emotional Grounding & Overwhelm
-// ----------------------------------------------------------------------------
+// ============================================================================
+// 9. DEDICATED EXPERIENCE 3: FOGGY FOREST & SENSORY GROUNDING
+// ============================================================================
 function handleForestInteraction() {
   if (!state.quests.postpartumDone) {
     showDialogue(
       {
-        text: 'Thick, swirling mist blankets the forest path. Nihi steps back: "The mist is too dense right now. Let\'s check on the cottage porch first before we venture into the thicket."',
-        choices: [{ text: '"Good idea, let\'s visit Maya first."' }]
+        text: 'The thicket is wrapped in dense grey mist. Nihi steps back: "Let\'s check on Maya at the cottage porch first before we walk into the thicket."',
+        choices: [{ text: '"Good idea, let\'s visit Maya."' }]
       },
       'Misty Thicket',
-      'thoughtful'
+      'concerned'
     );
     return;
   }
 
   if (state.quests.forestDone) {
-    showDialogue(
-      {
-        text: 'The forest clearing is illuminated by soft sunbeams! A rare pastel Heart Blossom blooms peacefully in the center where the fog once lingered.',
-        choices: [{ text: 'Breathe the fresh, crisp woodland air 🌸' }]
-      },
-      'Woodland Clearing',
-      'happy'
-    );
+    openGroundingModal();
     return;
   }
 
-  // Active Forest Overwhelm Scene
   showDialogue(
     {
-      text: 'The mist swirls thicker. Nihi pauses, ears drooping: "Everything feels so hazy and fast... my thoughts are spinning in circles. What if we make a mistake? What if I get stuck in this fog forever?"',
+      text: '"Whoa... the path completely disappeared. My chest feels tight and my head is spinning in circles. Can we just stop moving for a second?"',
       choices: [
         {
-          text: '"Let\'s stop right here. We do not have to push through panic."',
+          text: '"Take all the time you need, Nihi. We do not have to push through panic."',
           expression: 'concerned',
           next: {
-            text: 'Nihi breathes a shaky sigh: "You mean... we can just pause? We don\'t have to force our way through?"',
+            text: '"Phew... thank you. Let\'s do a simple 5-4-3-2-1 sensory grounding check together."',
             choices: [
               {
-                text: '"Exactly. Let\'s ground our senses together with 5-4-3-2-1."',
-                next: {
-                  text: 'Nihi nods gently: "Yes, please. Guide me through it."',
-                  choices: [
-                    {
-                      text: '🌿 Begin Sensory Grounding Exercise 🌿',
-                      action: () => openGroundingModal()
-                    }
-                  ]
-                }
+                text: '🌿 Begin Sensory Grounding with Nihi',
+                action: () => openGroundingModal()
               }
             ]
           }
         },
         {
-          text: '"Feel your feet on the path. The fog is just weather; it will pass."',
-          expression: 'thoughtful',
+          text: '"Feel your feet on the path. The fog is just passing weather."',
+          expression: 'happy',
           next: {
-            text: 'Nihi blinks softly: "It helps to remember that feelings are like passing weather. Can we do a slow breath together?"',
+            text: '"Yeah... passing weather. A slow breath will help center us."',
             choices: [
               {
-                text: '🌿 Start Grounding & Calming Breath',
+                text: '🌿 Start Grounding & Breath',
                 action: () => openGroundingModal()
               }
             ]
@@ -1451,12 +1286,11 @@ function handleForestInteraction() {
   );
 }
 
-// 5-4-3-2-1 Sensory Grounding Mini-Game
 let groundingStep = 0;
 const groundingSteps = [
   {
     title: 'Step 1: Notice 3 Soft Colors You Can See',
-    hint: 'Click 3 pastel flowers to gently bring your focus back to the present moment.',
+    hint: 'Click 3 pastel flowers to bring your eyes back to the present moment.',
     targetTaps: 3,
     items: [
       { icon: '🌸', label: 'Pastel Pink' },
@@ -1467,18 +1301,18 @@ const groundingSteps = [
   },
   {
     title: 'Step 2: Notice 2 Gentle Physical Sensations',
-    hint: 'Tap 2 comforting textures (soft breeze, warm sweater).',
+    hint: 'Tap 2 comforting textures to connect with your body.',
     targetTaps: 2,
     items: [
       { icon: '🍃', label: 'Cool Breeze' },
       { icon: '🧣', label: 'Warm Sweater' },
-      { icon: '🪨', label: 'Firm Ground' },
-      { icon: '💖', label: 'Steady Heartbeat' }
+      { icon: '🪨', label: 'Solid Path' },
+      { icon: '💖', label: 'Gentle Heartbeat' }
     ]
   },
   {
     title: 'Step 3: Acknowledge 1 Kind Thought for Yourself',
-    hint: 'Select the supportive affirmation that honors your pace.',
+    hint: 'Pick the affirmation that feels safest right now.',
     targetTaps: 1,
     items: [
       { icon: '🕊️', label: '"I am safe right now."' },
@@ -1533,9 +1367,8 @@ function loadGroundingStep(stepIndex) {
             loadGroundingStep(groundingStep);
           }, 600);
         } else {
-          // Finished all 3 steps!
           document.getElementById('grounding-instruction').textContent =
-            'Wonderful... your nervous system feels centered, and the fog is beginning to lift.';
+            'Look... your shoulders dropped, your breath is steady, and the fog is rolling away.';
           document.getElementById('btn-finish-grounding').classList.remove('hidden');
         }
       }
@@ -1549,7 +1382,6 @@ function completeGroundingQuest() {
   state.quests.forestDone = true;
   state.quests.current = 'all_complete';
 
-  // Smooth fog clearing animation
   let dissolveInterval = setInterval(() => {
     state.quests.fogDissolved += 0.05;
     if (state.quests.fogDissolved >= 1.0) {
@@ -1560,7 +1392,6 @@ function completeGroundingQuest() {
 
   window.soundEngine.playBloomFanfare();
 
-  // Burst rainbow sparkles across right side
   for (let s = 0; s < 40; s++) {
     addSparkle(
       15 * TILE_SIZE + Math.random() * (5 * TILE_SIZE),
@@ -1571,10 +1402,10 @@ function completeGroundingQuest() {
 
   showDialogue(
     {
-      text: 'The dense fog dissolves into golden sunbeams! Nihi smiles with sparkling eyes: "My chest feels open again. When we paused and noticed the world around us, the panic didn\'t control us anymore. Look—the entire garden is radiant!"',
+      text: '"The fog lifted! When we paused and checked in with our senses, the panic couldn\'t hold on anymore. Look at the garden—it\'s completely glowing!"',
       choices: [
         {
-          text: '✨ Celebrate with Nihi! ✨',
+          text: '✨ Celebrate the Finale! ✨',
           action: () => triggerGameFinale()
         }
       ]
@@ -1584,18 +1415,18 @@ function completeGroundingQuest() {
   );
 }
 
-// ----------------------------------------------------------------------------
-// MISC COZY INTERACTIONS: Fountain & Bench
-// ----------------------------------------------------------------------------
+// ============================================================================
+// 10. FOUNTAIN & BENCH INTERACTIONS
+// ============================================================================
 function handleFountainInteraction() {
   window.soundEngine.playTone(520, 0.4, 'sine', 0.08);
   showDialogue(
     {
-      text: 'The water ripples musically against smooth river stones. Droplets sparkle in the sun. Nihi murmurs: "Water doesn\'t rush, yet it reaches everywhere. It\'s okay to move at your own pace."',
-      choices: [{ text: '"A lovely reminder."' }]
+      text: '"Listen to the water droplets. Water never rushes to be somewhere else. Take things at your own natural pace today."',
+      choices: [{ text: '"That\'s really peaceful."' }]
     },
     'Garden Fountain',
-    'thoughtful'
+    'happy'
   );
 }
 
@@ -1603,54 +1434,23 @@ function handleBenchInteraction() {
   window.soundEngine.playGroundingBell(2);
   showDialogue(
     {
-      text: 'You sit down beside Nihi on the smooth cedar bench. A gentle breeze carries the scent of sweet chamomile. There is nothing you have to achieve in this moment. You are doing enough.',
-      choices: [{ text: 'Rest peacefully for a moment 💖' }]
+      text: '"You and Nihi sit quietly on the cedar bench. The scent of warm chamomile fills the air. There is nothing you have to prove right now. You are doing enough."',
+      choices: [{ text: 'Breathe softly for a moment 💖' }]
     },
     'Cedar Bench',
     'happy'
   );
 }
 
-// ----------------------------------------------------------------------------
-// 8. FINALE & ENDING SCREEN
-// ----------------------------------------------------------------------------
+// ============================================================================
+// 11. FINALE & JOURNAL
+// ============================================================================
 function triggerGameFinale() {
   state.screen = 'ending';
   document.getElementById('screen-ending').classList.remove('hidden');
   window.soundEngine.playBloomFanfare();
-
-  // Draw celebration canvas
-  const cCanvas = document.getElementById('ending-celebration-canvas');
-  const cCtx = cCanvas.getContext('2d');
-  cCtx.clearRect(0, 0, 200, 90);
-  cCtx.imageSmoothingEnabled = false;
-
-  // Background
-  const grad = cCtx.createLinearGradient(0, 0, 0, 90);
-  grad.addColorStop(0, '#ffe5ec');
-  grad.addColorStop(1, '#cdb4db');
-  cCtx.fillStyle = grad;
-  cCtx.fillRect(0, 0, 200, 90);
-
-  // Draw player & Nihi hugging/standing together
-  cCtx.save();
-  cCtx.translate(70, 30);
-  drawPlayer(0, 0, 'down', 0, false);
-  drawNihi(32, 0, 'happy', 0);
-  cCtx.restore();
-
-  // Sparkles
-  cCtx.fillStyle = '#ff659c';
-  cCtx.fillRect(30, 25, 4, 4);
-  cCtx.fillRect(155, 30, 4, 4);
-  cCtx.fillStyle = '#ffd166';
-  cCtx.fillRect(45, 60, 3, 3);
-  cCtx.fillRect(140, 55, 3, 3);
 }
 
-// ============================================================================
-// 9. HUD, INVENTORY & JOURNAL MANAGEMENT
-// ============================================================================
 function updateQuestHUD(title, sub) {
   document.getElementById('hud-quest-title').textContent = title;
   document.getElementById('hud-quest-sub').textContent = sub;
@@ -1669,34 +1469,39 @@ function updateInventoryHUD() {
 }
 
 function checkQuestProgressAfterDialogue() {
-  // Check if all collectibles found
   if (state.quests.current === 'collect_flora' && state.inventory.items.length >= 3) {
     state.quests.current = 'mirror_pcos';
-    updateQuestHUD('Visit the Shifting Mirror', 'Take your 3 gathered flora to the ornate mirror.');
+    updateQuestHUD('Visit Saffron at the Mirror', 'Take your 3 gathered flora to the northwest grove.');
   }
 }
 
 function renderSavedQuestionsInJournal() {
   const container = document.getElementById('saved-questions-list');
-  if (state.savedQuestions.length === 0) {
-    container.innerHTML = '<em>No questions saved yet. Complete the Mirror interaction in the garden!</em>';
-    return;
+  let html = '';
+
+  if (state.savedPcosQuestions.length > 0) {
+    html += '<div style="margin-bottom: 10px;"><strong>🌸 Saffron\'s PCOS Doctor Prep:</strong><ul style="padding-left: 16px; margin-top: 4px;">';
+    state.savedPcosQuestions.forEach(q => {
+      html += `<li style="margin-bottom: 4px; color: #422040;">${q}</li>`;
+    });
+    html += '</ul></div>';
   }
 
-  let html = '<ul style="padding-left: 16px; margin-top: 6px;">';
-  state.savedQuestions.forEach(q => {
-    html += `<li style="margin-bottom: 6px;"><strong>${q.title}:</strong><br><span style="color: #6f4c6a;">${q.desc}</span></li>`;
-  });
-  html += '</ul>';
+  if (state.savedPpdTasks.length > 0) {
+    html += '<div style="margin-top: 10px; border-top: 1px dashed #d5c4e3; padding-top: 8px;"><strong>🌙 Maya\'s Support Requests:</strong><ul style="padding-left: 16px; margin-top: 4px;">';
+    state.savedPpdTasks.forEach(t => {
+      html += `<li style="margin-bottom: 4px; color: #422040;">${t}</li>`;
+    });
+    html += '</ul></div>';
+  }
 
-  if (state.selectedSupportMessage) {
-    html += `<div style="margin-top: 10px; border-top: 1px dashed #d5c4e3; padding-top: 8px;"><strong>Saved Support Message:</strong><br><span style="color: #6f4c6a;">${state.selectedSupportMessage}</span></div>`;
+  if (!html) {
+    html = '<em>Complete the Shifting Mirror & Cottage Porch scenes to generate your custom cards!</em>';
   }
 
   container.innerHTML = html;
 }
 
-// Setup Journal Tabs
 function setupJournalTabs() {
   const tabs = document.querySelectorAll('.j-tab');
   tabs.forEach(tab => {
@@ -1714,11 +1519,10 @@ function setupJournalTabs() {
 }
 
 // ============================================================================
-// 10. EVENT LISTENERS & INPUT HANDLING
+// 12. INPUT HANDLING & EVENT LISTENERS
 // ============================================================================
 function setupInput() {
   window.addEventListener('keydown', e => {
-    // If modal or ending is active, let mouse/ESC handle
     if (e.key === 'Escape') {
       closeAllModals();
       return;
@@ -1734,7 +1538,6 @@ function setupInput() {
       return;
     }
 
-    // Dialogue progression with Space or Enter
     if (state.screen === 'dialogue') {
       if (e.key === ' ' || e.key === 'Enter' || e.key === 'e' || e.key === 'E') {
         const choiceBtns = dialogueChoicesEl.querySelectorAll('.dialogue-choice-btn');
@@ -1745,13 +1548,11 @@ function setupInput() {
       return;
     }
 
-    // Movement
     if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') state.keys.up = true;
     if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') state.keys.down = true;
     if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') state.keys.left = true;
     if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') state.keys.right = true;
 
-    // Interaction
     if (e.key === 'e' || e.key === 'E' || e.key === ' ' || e.key === 'Enter') {
       if (state.screen === 'playing' && state.activeInteractable) {
         state.activeInteractable.onInteract();
@@ -1766,7 +1567,6 @@ function setupInput() {
     if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') state.keys.right = false;
   });
 
-  // Title Buttons
   document.getElementById('btn-start-game').onclick = () => {
     window.soundEngine.ensureContext();
     window.soundEngine.playSelect();
@@ -1776,7 +1576,6 @@ function setupInput() {
     document.getElementById('game-hud').classList.remove('hidden');
     state.screen = 'playing';
 
-    // Start introductory dialogue with Nihi
     setTimeout(() => {
       startIntroDialogue();
     }, 400);
@@ -1794,7 +1593,6 @@ function setupInput() {
     document.getElementById('modal-about').classList.add('hidden');
   };
 
-  // Replay Button on Ending Screen
   document.getElementById('btn-replay').onclick = () => {
     document.getElementById('screen-ending').classList.add('hidden');
     state.screen = 'playing';
@@ -1805,7 +1603,6 @@ function setupInput() {
     toggleJournalModal();
   };
 
-  // Titlebar controls
   document.getElementById('btn-sound-toggle').onclick = () => {
     toggleMuteAudio();
   };
@@ -1819,23 +1616,25 @@ function setupInput() {
     alert('Bleuming is running in cozy mode! You can continue playing or resting anytime.');
   };
 
-  // Modals Close buttons
-  document.getElementById('close-modal-questions').onclick = () => {
-    document.getElementById('modal-questions').classList.add('hidden');
+  // PCOS Hub Buttons
+  document.getElementById('close-modal-pcos').onclick = () => {
+    document.getElementById('modal-pcos-hub').classList.add('hidden');
     state.screen = 'playing';
   };
-  document.getElementById('btn-save-questions').onclick = () => {
+  document.getElementById('btn-save-pcos').onclick = () => {
     completePcosQuest();
   };
 
+  // Postpartum Hub Buttons
   document.getElementById('close-modal-postpartum').onclick = () => {
-    document.getElementById('modal-postpartum').classList.add('hidden');
+    document.getElementById('modal-postpartum-hub').classList.add('hidden');
     state.screen = 'playing';
   };
-  document.getElementById('btn-send-support').onclick = () => {
+  document.getElementById('btn-save-ppd').onclick = () => {
     completePostpartumQuest();
   };
 
+  // Grounding Buttons
   document.getElementById('close-modal-grounding').onclick = () => {
     document.getElementById('modal-grounding').classList.add('hidden');
     state.screen = 'playing';
@@ -1844,6 +1643,7 @@ function setupInput() {
     completeGroundingQuest();
   };
 
+  // Journal Close
   document.getElementById('close-modal-journal').onclick = () => {
     document.getElementById('modal-journal').classList.add('hidden');
     if (state.screen === 'modal') state.screen = 'playing';
@@ -1880,49 +1680,14 @@ function closeAllModals() {
 }
 
 // ============================================================================
-// 11. TITLE SCREEN PREVIEW ANIMATION
-// ============================================================================
-function drawTitlePreview() {
-  const previewCanvas = document.getElementById('title-preview-canvas');
-  if (!previewCanvas) return;
-  const pCtx = previewCanvas.getContext('2d');
-  pCtx.clearRect(0, 0, 160, 80);
-  pCtx.imageSmoothingEnabled = false;
-
-  // Background
-  pCtx.fillStyle = '#fceef6';
-  pCtx.fillRect(0, 0, 160, 80);
-
-  // Soft grass mound
-  pCtx.fillStyle = '#b5d8b7';
-  pCtx.beginPath();
-  pCtx.ellipse(80, 75, 70, 20, 0, 0, Math.PI * 2);
-  pCtx.fill();
-
-  // Draw player & Nihi
-  pCtx.save();
-  pCtx.translate(45, 30);
-  drawPlayer(0, 0, 'down', Date.now() * 0.003, false);
-  drawNihi(38, 0, 'happy', Date.now() * 0.003);
-  pCtx.restore();
-
-  // Decorative sparkles
-  pCtx.fillStyle = '#ff8ebb';
-  pCtx.fillRect(20, 20, 3, 3);
-  pCtx.fillRect(135, 25, 3, 3);
-}
-
-// ============================================================================
-// 12. MAIN GAME LOOP (60 FPS)
+// 13. MAIN GAME LOOP (60 FPS)
 // ============================================================================
 function gameLoop() {
-  // 1. Update Game Physics & States
   updatePlayerMovement();
   updateNihiAI();
   checkCollectiblesPickup();
   updateInteractables();
 
-  // 2. Clear & Render Map Tiles
   ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
   for (let r = 0; r < MAP_ROWS; r++) {
@@ -1931,10 +1696,8 @@ function gameLoop() {
     }
   }
 
-  // 3. Render Collectibles
   floraCollectibles.forEach(item => drawCollectible(item));
 
-  // 4. Render Characters in Y-sorted depth
   if (state.player.y < state.nihi.y) {
     drawPlayer(state.player.x, state.player.y, state.player.dir, state.player.frame, state.player.isMoving);
     drawNihi(state.nihi.x, state.nihi.y, state.nihi.expression, state.nihi.floatAngle);
@@ -1943,25 +1706,14 @@ function gameLoop() {
     drawPlayer(state.player.x, state.player.y, state.player.dir, state.player.frame, state.player.isMoving);
   }
 
-  // 5. Render Fog Shader & Sparkle Particles
   drawFoggyForestOverlay();
   updateAndDrawParticles();
-
-  // 6. Title preview animation loop if on title
-  if (state.screen === 'title') {
-    drawTitlePreview();
-  }
 
   requestAnimationFrame(gameLoop);
 }
 
-// ============================================================================
-// 13. INITIALIZATION ON LOAD
-// ============================================================================
 window.addEventListener('load', () => {
   setupInput();
   setupJournalTabs();
-  drawTitlePreview();
   requestAnimationFrame(gameLoop);
 });
-
