@@ -3,26 +3,26 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bleuming — Y2K Cozy Wellbeing Adventure</title>
-  <!-- Pixel font from Google Fonts with clean fallback stack -->
+  <title>Bleuming — A Cozy Women's Wellbeing Adventure</title>
+  <!-- Pixel font for headings + Clean, readable Quicksand for dialogue & journal -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Retro desktop / Y2K window wrapper -->
+  <!-- Retro desktop shell container -->
   <div id="desktop-container">
     <div class="retro-window main-window">
       <!-- Retro Window Titlebar -->
       <div class="window-titlebar">
         <div class="titlebar-left">
           <span class="heart-icon">💖</span>
-          <span class="window-title">Bleuming.exe — v2.0 [Y2K Pixel Edition]</span>
+          <span class="window-title">Bleuming.exe — Cozy Garden Edition</span>
         </div>
         <div class="titlebar-controls">
-          <button id="btn-sound-toggle" class="titlebar-btn" title="Toggle Sound">🔊</button>
-          <button id="btn-journal-toggle" class="titlebar-btn" title="Open Pocket Notes">📖</button>
+          <button id="btn-sound-toggle" class="titlebar-btn" title="Toggle Audio (M)">🔊</button>
+          <button id="btn-journal-toggle" class="titlebar-btn" title="Open Field Journal (J)">📖 Journal</button>
           <button class="titlebar-btn" id="btn-window-min">_</button>
           <button class="titlebar-btn" id="btn-window-heart">♥</button>
           <button class="titlebar-btn close-btn" id="btn-window-close">×</button>
@@ -34,33 +34,35 @@
         <!-- 640x480 pixel art canvas -->
         <canvas id="game-canvas" width="640" height="480"></canvas>
 
-        <!-- Dynamic Interaction Prompt -->
+        <!-- Compact Contextual Interaction Prompt -->
         <div id="interaction-prompt" class="hidden">
           <span class="key-badge">E</span> <span id="prompt-text">Examine</span>
         </div>
 
-        <!-- HUD: Quest Tracker & Inventory -->
+        <!-- Compact In-Game HUD -->
         <div id="game-hud" class="hud-layer hidden">
-          <div class="hud-card quest-card">
-            <div class="hud-label">⭐ CURRENT JOURNEY</div>
+          <!-- Top-Left: Compact Quest Panel -->
+          <div class="hud-panel quest-hud">
+            <div class="hud-tag">CURRENT QUEST</div>
             <div id="hud-quest-title">Explore the Garden</div>
-            <div id="hud-quest-sub">Look for faded blossoms & speak to Nihi.</div>
+            <div id="hud-quest-sub">Look for faded blossoms & speak with Nihi.</div>
           </div>
 
-          <div class="hud-card inventory-card">
-            <div class="hud-label">🎒 POCKET FINDS</div>
+          <!-- Top-Right: Neat Inventory Strip -->
+          <div class="hud-panel inventory-hud">
+            <div class="hud-tag">POCKET FINDS</div>
             <div class="inventory-slots">
-              <div class="inv-slot" id="slot-0" title="Dewdrop Crystal">🌸</div>
-              <div class="inv-slot" id="slot-1" title="Calming Chamomile">🌿</div>
-              <div class="inv-slot" id="slot-2" title="Sunstone Sprout">✨</div>
+              <div class="inv-slot" id="slot-0" title="Dewdrop Crystal (Checking in on sensations)">🌸</div>
+              <div class="inv-slot" id="slot-1" title="Calming Chamomile (Rest is required)">🌿</div>
+              <div class="inv-slot" id="slot-2" title="Sunstone Sprout (You deserve care)">✨</div>
             </div>
           </div>
         </div>
 
-        <!-- Dialogue System Overlay (Now with Real AI Pixel Art Portraits!) -->
+        <!-- Dialogue Box (Clean, readable text + Real pixel art avatar) -->
         <div id="dialogue-box" class="dialogue-container hidden">
           <div class="dialogue-portrait-frame">
-            <img id="dialogue-portrait-img" src="assets/nihi_happy.jpg" alt="Speaker Portrait" class="portrait-avatar">
+            <img id="dialogue-portrait-img" src="assets/nihi_happy.jpg" alt="Portrait" class="portrait-avatar">
             <div id="speaker-name" class="speaker-tag">Nihi</div>
           </div>
           <div class="dialogue-body">
@@ -70,347 +72,281 @@
         </div>
 
         <!-- ================================================================= -->
-        <!-- DEDICATED EXPERIENCE 1: PCOS & PCOD SANCTUARY                    -->
+        <!-- NIHI'S FIELD JOURNAL (Illustrated Storybook Design)               -->
         <!-- ================================================================= -->
-        <div id="modal-pcos-hub" class="game-modal hidden">
-          <div class="modal-box retro-window wide-modal">
+        <div id="modal-journal" class="game-modal hidden">
+          <div class="journal-book-shell retro-window">
             <div class="window-titlebar mini">
-              <span>🪞 Saffron's Shifting Mirror — PCOS & PCOD Care Hub</span>
-              <button class="modal-close-btn" id="close-modal-pcos">✕</button>
+              <span>📖 Nihi's Field Journal — Illustrated Wellbeing Guide</span>
+              <button class="modal-close-btn" id="close-modal-journal">✕ Close [Esc]</button>
             </div>
-            <div class="modal-content hub-modal-content">
-              <div class="scene-banner-wrapper">
-                <img src="assets/scene_mirror.jpg" alt="PCOS Shifting Mirror Scene" class="scene-header-img">
-                <div class="scene-banner-tag">🌸 PCOS / PCOD Awareness Grove</div>
-              </div>
-
-              <div class="hub-nav-tabs">
-                <button class="hub-tab active" data-tab="pcos-signals">🌿 Body Signals & Mythbusters</button>
-                <button class="hub-tab" data-tab="pcos-prep">📋 Doctor Prep Checklist</button>
-                <button class="hub-tab" data-tab="pcos-plan">💌 Your Doctor Visit Card</button>
-              </div>
-
-              <!-- Tab 1: Signals & Real Talk -->
-              <div class="hub-tab-pane active" id="pcos-signals">
-                <div class="character-quote-box">
-                  <img src="assets/portrait_saffron.jpg" alt="Saffron" class="mini-avatar">
-                  <div class="quote-text">
-                    <strong>Saffron:</strong> "My cycle skipped two months, my energy crashed after lunch, and someone told me to 'just do more cardio'. Having PCOS isn't a failure—it's an endocrine puzzle."
-                  </div>
+            
+            <div class="journal-inner-layout">
+              <!-- Left Sidebar: Chapter Nav & Illustration -->
+              <div class="journal-sidebar">
+                <div class="journal-nav-group">
+                  <button class="j-nav-btn active" data-chapter="ch-pcos">
+                    <span class="j-nav-icon">🪞</span>
+                    <span class="j-nav-title">1. Changing Mirror<br><small>PCOS & Rhythms</small></span>
+                  </button>
+                  <button class="j-nav-btn" data-chapter="ch-postpartum">
+                    <span class="j-nav-icon">🌙</span>
+                    <span class="j-nav-title">2. Tired Moon<br><small>Postpartum Care</small></span>
+                  </button>
+                  <button class="j-nav-btn" data-chapter="ch-grounding">
+                    <span class="j-nav-icon">🌿</span>
+                    <span class="j-nav-title">3. Foggy Forest<br><small>Grounding & Calm</small></span>
+                  </button>
+                  <button class="j-nav-btn" data-chapter="ch-saved">
+                    <span class="j-nav-icon">💌</span>
+                    <span class="j-nav-title">4. Action Cards<br><small>Your Doctor & Care Prep</small></span>
+                  </button>
                 </div>
 
-                <div class="education-grid">
-                  <div class="edu-card">
-                    <h4>🗓️ The Irregular Rhythm</h4>
-                    <p>PCOS often means delayed or absent ovulation. It's not because you did something wrong; follicles simply take longer to mature.</p>
-                  </div>
-                  <div class="edu-card">
-                    <h4>⚡ The Metabolic Fatigue</h4>
-                    <p>Up to 70% of PCOS involves insulin resistance. Cravings and post-meal crashes are biochemical, not a lack of willpower.</p>
-                  </div>
-                  <div class="edu-card">
-                    <h4>✨ Hair & Skin Fluctuations</h4>
-                    <p>Elevated androgens can cause cystic acne, facial hair, or thinning hair. Real treatments exist—you don't have to just suffer in silence.</p>
-                  </div>
-                  <div class="edu-card">
-                    <h4>🚫 No Universal 'Cure'</h4>
-                    <p>PCOS is managed, not erased by detoxes. Supportive nutrition, sleep, and doctor-prescribed care honor your unique body.</p>
-                  </div>
+                <div class="journal-art-preview">
+                  <img id="journal-hero-img" src="assets/scene_mirror.jpg" alt="Chapter Illustration" class="j-hero-pic">
+                  <div id="journal-hero-caption" class="j-hero-caption">Saffron's Changing Mirror Grove</div>
                 </div>
               </div>
 
-              <!-- Tab 2: Interactive Symptom Checklist -->
-              <div class="hub-tab-pane" id="pcos-prep">
-                <p class="modal-intro">
-                  Select what you've noticed lately. We'll format these into concise, clinical questions for your doctor visit:
-                </p>
-                <div class="checklist-container" id="pcos-symptom-checklist">
-                  <label class="pcos-check-item">
-                    <input type="checkbox" value="cycle" checked>
-                    <span><strong>Unpredictable / Skipped Cycles:</strong> "Can we check my LH/FSH ratio and order a pelvic ultrasound?"</span>
-                  </label>
-                  <label class="pcos-check-item">
-                    <input type="checkbox" value="insulin" checked>
-                    <span><strong>Post-Meal Energy Crashes & Cravings:</strong> "Could we run a fasting insulin & glucose test to assess metabolic sensitivity?"</span>
-                  </label>
-                  <label class="pcos-check-item">
-                    <input type="checkbox" value="androgens" checked>
-                    <span><strong>Acne / Hirsutism / Hair Thinning:</strong> "Can we test Free & Total Testosterone and DHEA-S levels?"</span>
-                  </label>
-                  <label class="pcos-check-item">
-                    <input type="checkbox" value="thyroid">
-                    <span><strong>Brain Fog & Sudden Weight Shifts:</strong> "Could we also rule out Hashimoto's/thyroid dysfunction with a full TSH/Free T4 panel?"</span>
-                  </label>
+              <!-- Right Content Area: Illustrated Readable Storybook Cards -->
+              <div class="journal-content-area">
+                <!-- Chapter 1: PCOS & PCOD -->
+                <div class="journal-chapter active" id="ch-pcos">
+                  <div class="chapter-header pcos-accent">
+                    <h2>Chapter 1: The Changing Mirror</h2>
+                    <p class="chapter-subtitle">Understanding Polycystic Ovary Syndrome (PCOS & PCOD) without judgment</p>
+                  </div>
+
+                  <div class="journal-card-stack">
+                    <div class="j-card">
+                      <div class="card-icon-title">
+                        <span class="c-icon">🗓️</span>
+                        <h3>Every Body Has Its Own Rhythm</h3>
+                      </div>
+                      <p>PCOS is an endocrine metabolic condition, not a personal failing. Irregular or missed cycles happen because immature follicles take longer to ovulate—not because you did something wrong.</p>
+                    </div>
+
+                    <div class="j-card">
+                      <div class="card-icon-title">
+                        <span class="c-icon">⚡</span>
+                        <h3>The Metabolic Fatigue Factor</h3>
+                      </div>
+                      <p>Up to 70% of people with PCOS experience insulin resistance. Sudden post-meal crashes, intense sugar cravings, and brain fog are biochemical signals—not a lack of discipline.</p>
+                    </div>
+
+                    <div class="j-card">
+                      <div class="card-icon-title">
+                        <span class="c-icon">✨</span>
+                        <h3>Notice Patterns, Don't Self-Diagnose</h3>
+                      </div>
+                      <p>Acne, hirsutism, or weight fluctuations can have many causes. A game cannot diagnose you. If symptoms bother you, preparing neutral notes empowers you to partner effectively with a physician.</p>
+                    </div>
+
+                    <div class="j-card highlight-card">
+                      <div class="card-icon-title">
+                        <span class="c-icon">📋</span>
+                        <h3>Doctor Visit Questions to Take With You</h3>
+                      </div>
+                      <ul class="j-bullet-list">
+                        <li>"Could we check my LH/FSH ratio and evaluate an ultrasound?"</li>
+                        <li>"Can we run fasting insulin & glucose to check metabolic sensitivity?"</li>
+                        <li>"Are there specific medical treatments for my skin and androgen symptoms?"</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Chapter 2: Postpartum Wellbeing -->
+                <div class="journal-chapter" id="ch-postpartum">
+                  <div class="chapter-header postpartum-accent">
+                    <h2>Chapter 2: The Tired Moon</h2>
+                    <p class="chapter-subtitle">Emotional, physical, and maternal recovery after childbirth</p>
+                  </div>
+
+                  <div class="journal-card-stack">
+                    <div class="j-card">
+                      <div class="card-icon-title">
+                        <span class="c-icon">🌧️</span>
+                        <h3>Baby Blues vs. Postpartum Depression</h3>
+                      </div>
+                      <p>The 'Baby Blues' affects up to 80% of mothers for 1–2 weeks as estrogen and progesterone rapidly drop. Postpartum Depression (PPD) or Anxiety (PPA) is more persistent, intense, and requires professional support.</p>
+                    </div>
+
+                    <div class="j-card">
+                      <div class="card-icon-title">
+                        <span class="c-icon">🛡️</span>
+                        <h3>Postpartum Conditions are Medical, Not Moral</h3>
+                      </div>
+                      <p>Experiencing emotional numbness, exhaustion, or anxiety does not mean you don't love your baby. PPD is a treatable medical condition, never a measure of your capability as a parent.</p>
+                    </div>
+
+                    <div class="j-card">
+                      <div class="card-icon-title">
+                        <span class="c-icon">💭</span>
+                        <h3>Scary Intrusive Thoughts</h3>
+                      </div>
+                      <p>Fleeting 'what-if' flashes of harm are common symptoms of postpartum anxiety. They reflect heightened protective distress—not hidden intent or poor parenting.</p>
+                    </div>
+
+                    <div class="j-card highlight-card">
+                      <div class="card-icon-title">
+                        <span class="c-icon">🤝</span>
+                        <h3>Ask for Tangible Practical Help</h3>
+                      </div>
+                      <p>Don't wait for vague offers. Ask trusted friends: <em>"Could you drop off dinner on Tuesday?"</em> or <em>"Could you watch the crib for 90 minutes so I can take an uninterrupted shower and nap?"</em></p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Chapter 3: Overwhelm & Grounding -->
+                <div class="journal-chapter" id="ch-grounding">
+                  <div class="chapter-header grounding-accent">
+                    <h2>Chapter 3: The Foggy Forest</h2>
+                    <p class="chapter-subtitle">Sensory grounding when emotions feel overwhelming</p>
+                  </div>
+
+                  <div class="journal-card-stack">
+                    <div class="j-card">
+                      <div class="card-icon-title">
+                        <span class="c-icon">🌿</span>
+                        <h3>Permission to Pause</h3>
+                      </div>
+                      <p>When thoughts spiral, pushing through panic rarely helps. Stopping to breathe is not quitting—it gives your nervous system a chance to down-regulate from fight-or-flight.</p>
+                    </div>
+
+                    <div class="j-card">
+                      <div class="card-icon-title">
+                        <span class="c-icon">🧘</span>
+                        <h3>The 5-4-3-2-1 Sensory Reset</h3>
+                      </div>
+                      <p>Re-anchor your focus to tangible physical realities: notice 3 soothing colors, feel 2 gentle textures (warm sweater, cool breeze), and speak 1 kind affirmation to yourself.</p>
+                    </div>
+
+                    <div class="j-card">
+                      <div class="card-icon-title">
+                        <span class="c-icon">🕊️</span>
+                        <h3>Feelings are Weather</h3>
+                      </div>
+                      <p>Fog rolls into the garden, but it always rolls back out. Naming an emotion without self-criticism takes away its power to overwhelm you.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Chapter 4: Prepared Notes & Cards -->
+                <div class="journal-chapter" id="ch-saved">
+                  <div class="chapter-header saved-accent">
+                    <h2>Chapter 4: Your Prepared Notes & Action Items</h2>
+                    <p class="chapter-subtitle">Personalized healthcare prep cards created during your garden journey</p>
+                  </div>
+
+                  <div class="journal-card-stack">
+                    <div class="j-card doctor-summary-card">
+                      <h3>🩺 Saffron's Doctor Visit Prep Card</h3>
+                      <ul id="saved-pcos-list" class="j-bullet-list">
+                        <li>"Could we test fasting glucose and insulin sensitivity?"</li>
+                        <li>"Can we evaluate an ultrasound for ovarian follicle patterns?"</li>
+                        <li>"Are there medical treatments for my skin and androgen fluctuations?"</li>
+                      </ul>
+                    </div>
+
+                    <div class="j-card support-summary-card">
+                      <h3>🌙 Maya's Practical Support Requests</h3>
+                      <ul id="saved-ppd-list" class="j-bullet-list">
+                        <li>"Drop off ready-to-eat dinner on Tuesday (no hosting needed)."</li>
+                        <li>"Watch the baby for 2 hours so I can sleep uninterrupted."</li>
+                      </ul>
+                    </div>
+
+                    <div class="j-card helpline-card">
+                      <h3>📞 Confidential Support Lifelines</h3>
+                      <p>• <strong>Postpartum Support International:</strong> Call/Text 1-800-944-4773</p>
+                      <p>• <strong>National Maternal Mental Health Hotline:</strong> 1-833-852-6262 (24/7)</p>
+                      <p>• <strong>Crisis Text Line:</strong> Text HOME to 741741</p>
+                    </div>
+                  </div>
                 </div>
               </div>
+            </div>
 
-              <!-- Tab 3: Generated Doctor Visit Card -->
-              <div class="hub-tab-pane" id="pcos-plan">
-                <div class="doctor-card-printout" id="doctor-card-preview">
-                  <div class="doc-card-header">
-                    <span>🩺 HEALTHCARE PARTNER QUESTIONS</span>
-                    <span>Patient-Prepared</span>
-                  </div>
-                  <ul id="pcos-generated-questions">
-                    <li>"Could we check my LH/FSH ratio and evaluate pelvic ultrasound?"</li>
-                    <li>"Could we evaluate fasting glucose and insulin sensitivity?"</li>
-                    <li>"Are there specific hormonal tests for my skin and hair symptoms?"</li>
-                  </ul>
-                  <div class="doc-card-footer">
-                    <em>"I know my body best; let's work as a team to find what brings me relief."</em>
-                  </div>
-                </div>
-              </div>
-
-              <div class="modal-footer">
-                <span id="pcos-status-msg">Prepared with Saffron ✨</span>
-                <button id="btn-save-pcos" class="y2k-btn pink-btn">🌸 Save Card & Bloom the Garden</button>
-              </div>
+            <!-- Journal Footer -->
+            <div class="journal-footer">
+              <span class="footer-tip">💡 Tip: Press [J] or [Esc] anytime to return to your garden stroll.</span>
+              <button id="btn-close-journal" class="y2k-btn pink-btn">🌸 Back to Garden</button>
             </div>
           </div>
         </div>
 
         <!-- ================================================================= -->
-        <!-- DEDICATED EXPERIENCE 2: POSTPARTUM DEPRESSION & MATERNAL CARE     -->
-        <!-- ================================================================= -->
-        <div id="modal-postpartum-hub" class="game-modal hidden">
-          <div class="modal-box retro-window wide-modal">
-            <div class="window-titlebar mini">
-              <span>🌙 Maya's Porch & Nursery — Postpartum Wellbeing Haven</span>
-              <button class="modal-close-btn" id="close-modal-postpartum">✕</button>
-            </div>
-            <div class="modal-content hub-modal-content">
-              <div class="scene-banner-wrapper">
-                <img src="assets/scene_nursery.jpg" alt="Postpartum Nursery Porch" class="scene-header-img">
-                <div class="scene-banner-tag">🌙 Postpartum Depression & Maternal Support Haven</div>
-              </div>
-
-              <div class="hub-nav-tabs">
-                <button class="hub-tab active" data-tab="ppd-realities">👶 Blues vs. PPD</button>
-                <button class="hub-tab" data-tab="ppd-delegate">🤝 Practical Delegation Board</button>
-                <button class="hub-tab" data-tab="ppd-screening">🩺 Screening & Help Numbers</button>
-              </div>
-
-              <!-- Tab 1: Blues vs Depression -->
-              <div class="hub-tab-pane active" id="ppd-realities">
-                <div class="character-quote-box">
-                  <img src="assets/portrait_maya.jpg" alt="Maya" class="mini-avatar">
-                  <div class="quote-text">
-                    <strong>Maya:</strong> "I love my baby, but I broke down crying over dropped cereal. Admitting that you are drowning is terrifying, but it's the first step to coming up for air."
-                  </div>
-                </div>
-
-                <div class="education-grid">
-                  <div class="edu-card">
-                    <h4>🌧️ 'Baby Blues' (Days 3-14)</h4>
-                    <p>80% of new parents experience weepiness and mood swings as estrogen and progesterone plummet right after birth. It peaks within 2 weeks.</p>
-                  </div>
-                  <div class="edu-card">
-                    <h4>⛈️ Postpartum Depression (PPD/PPA)</h4>
-                    <p>If intense numbness, dread, insomnia despite exhaustion, or crying last beyond 2 weeks, this is a treatable medical condition, never a character flaw.</p>
-                  </div>
-                  <div class="edu-card">
-                    <h4>💭 Scary Intrusive Thoughts</h4>
-                    <p>Unwanted 'what-if' flashes of harm are common symptoms of postpartum anxiety and OCD. They reflect high distress, not true intent.</p>
-                  </div>
-                  <div class="edu-card">
-                    <h4>🛡️ The Caregiver Needs Care</h4>
-                    <p>You cannot pour from an empty cup. Protecting parental sleep and mental health directly protects the infant's development.</p>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Tab 2: Practical Delegation Board -->
-              <div class="hub-tab-pane" id="ppd-delegate">
-                <p class="modal-intro">
-                  Saying <em>"Let me know if you need anything"</em> is too vague for an exhausted parent. Pick 2 concrete tasks you want a friend or partner to take off your shoulders:
-                </p>
-                <div class="delegation-grid" id="delegation-board">
-                  <div class="delegate-chip selected" data-text="Bring over a warm homemade dinner on Tuesday (no hosting, just drop it off).">
-                    🍲 Drop off dinner (no hosting required)
-                  </div>
-                  <div class="delegate-chip selected" data-text="Watch the baby for 2 hours so I can take a long hot shower and uninterrupted nap.">
-                    🛌 2-hour baby watch for mom's nap
-                  </div>
-                  <div class="delegate-chip" data-text="Run one load of baby laundry and fold it quietly in the living room.">
-                    🧺 Do one load of laundry
-                  </div>
-                  <div class="delegate-chip" data-text="Sit with me on the porch for 20 minutes and talk about regular things.">
-                    ☕ 20-min friendly adult check-in
-                  </div>
-                </div>
-
-                <div class="message-preview-box" style="margin-top: 10px;">
-                  <div class="preview-label">READY-TO-SEND TEXT:</div>
-                  <div id="ppd-message-preview">
-                    "Hey! I'm really struggling with exhaustion today. Could you drop off dinner on Tuesday and watch the baby for 90 minutes so I can sleep?"
-                  </div>
-                </div>
-              </div>
-
-              <!-- Tab 3: Screening & Clinical Resources -->
-              <div class="hub-tab-pane" id="ppd-screening">
-                <div class="edu-card" style="margin-bottom: 8px;">
-                  <h4>📋 The Edinburgh Postnatal Depression Scale (EPDS)</h4>
-                  <p>A simple, standardized 10-question tool used worldwide by midwives, pediatricians, and OB-GYNs to spot PPD early without judgment.</p>
-                </div>
-                <div class="edu-card highlight-card">
-                  <h4>📞 Confidential Support Lifelines</h4>
-                  <p>• <strong>Postpartum Support International (PSI):</strong> Call/Text 1-800-944-4773 (English & Spanish)</p>
-                  <p>• <strong>National Maternal Mental Health Hotline (USA):</strong> Call/Text 1-833-852-6262 (24/7 Free & Confidential)</p>
-                  <p>• <strong>Crisis Text Line:</strong> Text HOME to 741741</p>
-                </div>
-              </div>
-
-              <div class="modal-footer">
-                <span id="ppd-status-msg">Care for the Caregiver 💖</span>
-                <button id="btn-save-ppd" class="y2k-btn lavender-btn">💌 Send Message & Warm the Nursery</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ================================================================= -->
-        <!-- DEDICATED EXPERIENCE 3: FOGGY FOREST & SENSORY GROUNDING         -->
+        <!-- SENSORY GROUNDING INTERACTIVE MINI-GAME                           -->
         <!-- ================================================================= -->
         <div id="modal-grounding" class="game-modal hidden">
           <div class="modal-box retro-window wide-modal">
             <div class="window-titlebar mini">
-              <span>🌿 The Misty Thicket — Sensory Grounding & Breath</span>
+              <span>🌿 The Misty Thicket — 5-4-3-2-1 Sensory Grounding</span>
               <button class="modal-close-btn" id="close-modal-grounding">✕</button>
             </div>
-            <div class="modal-content hub-modal-content">
-              <div class="scene-banner-wrapper">
-                <img src="assets/scene_forest.jpg" alt="Misty Forest Scene" class="scene-header-img">
-                <div class="scene-banner-tag">☁️ Emotional Grounding & Overwhelm Relief</div>
-              </div>
-
+            <div class="modal-content grounding-modal-body">
               <div class="grounding-step-header">
-                <div id="grounding-step-title">Step 1: Notice 3 Soft Colors Around You</div>
+                <div id="grounding-step-title">Step 1: Notice 3 Soft Colors You Can See</div>
                 <div class="breathing-circle-wrapper">
                   <div id="breathing-bubble" class="breathing-bubble">Breathe In...</div>
                 </div>
               </div>
+
               <div class="grounding-interactive-grid" id="grounding-grid">
-                <!-- Grounding interactive tiles to tap -->
+                <!-- Grounding tiles generated dynamically -->
               </div>
-              <p id="grounding-instruction" class="grounding-hint">Click the soft pastel flowers to ground your senses.</p>
+              <p id="grounding-instruction" class="grounding-hint">Click 3 pastel colors to gently center your senses.</p>
+
               <div class="modal-footer">
-                <button id="btn-finish-grounding" class="y2k-btn mint-btn hidden">Clear the Fog 🌸</button>
+                <button id="btn-finish-grounding" class="y2k-btn mint-btn hidden">✨ Clear the Mist & Restore the Grove ✨</button>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Pocket Health & Wellbeing Notes (In-Game Journal) -->
-        <div id="modal-journal" class="game-modal hidden">
-          <div class="modal-box retro-window wide-modal">
-            <div class="window-titlebar mini">
-              <span>📖 Nihi's Pocket Notes — Care & Understanding</span>
-              <button class="modal-close-btn" id="close-modal-journal">✕</button>
-            </div>
-            <div class="modal-content journal-body">
-              <div class="journal-tabs">
-                <button class="j-tab active" data-tab="tab-pcos">🌸 PCOS & PCOD Hub</button>
-                <button class="j-tab" data-tab="tab-postpartum">🌙 Postpartum Depression</button>
-                <button class="j-tab" data-tab="tab-grounding">☁️ Overwhelm & Grounding</button>
-                <button class="j-tab" data-tab="tab-saved">💌 Saved Health Cards</button>
-              </div>
-              <div class="journal-tab-pane active" id="tab-pcos">
-                <div class="journal-header-thumb">
-                  <img src="assets/scene_mirror.jpg" alt="Mirror" class="j-thumb">
-                  <div>
-                    <h3>The Changing Mirror: PCOS & PCOD</h3>
-                    <p>• <strong>Diverse Symptoms:</strong> Irregular or absent periods, fatigue, cystic acne, and insulin resistance aren't flaws—they are endocrine communications.</p>
-                    <p>• <strong>Lab Work That Counts:</strong> Ask for Free/Total Testosterone, Fasting Glucose/Insulin, and a Pelvic Ultrasound.</p>
-                  </div>
-                </div>
-              </div>
-              <div class="journal-tab-pane" id="tab-postpartum">
-                <div class="journal-header-thumb">
-                  <img src="assets/scene_nursery.jpg" alt="Nursery" class="j-thumb">
-                  <div>
-                    <h3>The Tired Moon: Postpartum Wellbeing</h3>
-                    <p>• <strong>Medical, Not Moral:</strong> PPD and PPA are medical conditions resulting from intense hormonal shifts, not poor mothering.</p>
-                    <p>• <strong>Ask for Specifics:</strong> Never feel guilty asking for a meal drop-off or a 2-hour sleep shift.</p>
-                  </div>
-                </div>
-              </div>
-              <div class="journal-tab-pane" id="tab-grounding">
-                <div class="journal-header-thumb">
-                  <img src="assets/scene_forest.jpg" alt="Forest" class="j-thumb">
-                  <div>
-                    <h3>The Foggy Forest: Calming Overwhelm</h3>
-                    <p>• <strong>5-4-3-2-1 Sensory Reset:</strong> Connect with sight, touch, and sound to pull your nervous system out of an anxiety spiral.</p>
-                    <p>• <strong>Pause without Guilt:</strong> Pacing yourself is an active form of self-defense.</p>
-                  </div>
-                </div>
-              </div>
-              <div class="journal-tab-pane" id="tab-saved">
-                <h3>Your Prepared Cards & Action Items</h3>
-                <div id="saved-questions-list"><em>Complete the Shifting Mirror & Cottage Porch scenes to generate your custom cards!</em></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Title Screen Overlay with REAL Generated Pixel Art! -->
+        <!-- ================================================================= -->
+        <!-- TITLE SCREEN OVERLAY                                              -->
+        <!-- ================================================================= -->
         <div id="screen-title" class="screen-overlay">
           <div class="title-card retro-window">
             <div class="window-titlebar mini">
               <span>★ Welcome to Bleuming ★</span>
-              <span>[ Y2K Pixel Edition ]</span>
+              <span>[ Cozy Edition ]</span>
             </div>
             <div class="title-inner">
               <div class="title-art-wrapper">
                 <img src="assets/title_banner.jpg" alt="Bleuming Title Banner" class="title-main-banner">
               </div>
+              <h1 class="game-logo">Bleuming</h1>
               <div class="game-subtitle">A cozy pixel-art journey of gentle listening & care</div>
               <p class="tagline-text">
                 "You don't have to be the same as everyone else to deserve care."
               </p>
               <div class="title-btn-group">
                 <button id="btn-start-game" class="y2k-btn pink-btn bounce-btn">✨ Start Garden Journey ✨</button>
-                <button id="btn-read-info" class="y2k-btn lavender-btn">📖 About the Game</button>
+                <button id="btn-open-journal-title" class="y2k-btn lavender-btn">📖 Open Field Journal</button>
               </div>
               <div class="instructions-panel">
                 <div class="keys-guide">
                   <span><strong>Move:</strong> [W][A][S][D] or [Arrows]</span>
                   <span><strong>Interact:</strong> [E] or [Space]</span>
-                  <span><strong>Pocket Notes:</strong> [J] or [Esc]</span>
+                  <span><strong>Journal:</strong> [J]</span>
+                  <span><strong>Mute:</strong> [M]</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- About Modal from Title Screen -->
-        <div id="modal-about" class="game-modal hidden">
-          <div class="modal-box retro-window">
-            <div class="window-titlebar mini">
-              <span>About Bleuming — Women's Wellbeing</span>
-              <button class="modal-close-btn" id="close-modal-about">✕</button>
-            </div>
-            <div class="modal-content">
-              <h3>Design Philosophy & Compassion</h3>
-              <p>Bleuming is a cozy indie game designed for anyone navigating hormonal changes (PCOS/PCOD), postpartum emotional overwhelm, or daily anxiety.</p>
-              <ul>
-                <li><strong>No AI Slop / No Therapy Cliches:</strong> Grounded, human dialogue and practical action steps.</li>
-                <li><strong>Dedicated Experiences:</strong> Separate, focused spaces for PCOS/PCOD and Postpartum Depression.</li>
-                <li><strong>Authentic Pixel Art:</strong> Real retro Y2K pixel art assets and 8-bit Web Audio synth.</li>
-              </ul>
-              <div class="modal-footer">
-                <button class="y2k-btn mint-btn" id="btn-about-ok">Let's Play! 🌸</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Ending Screen Overlay with REAL Generated Pixel Art! -->
+        <!-- ================================================================= -->
+        <!-- ENDING SCREEN OVERLAY                                             -->
+        <!-- ================================================================= -->
         <div id="screen-ending" class="screen-overlay hidden">
           <div class="ending-card retro-window wide-modal">
             <div class="window-titlebar mini">
-              <span>💖 The Garden is in Full Bleum 💖</span>
+              <span>💖 The Garden is in Full Bloom 💖</span>
               <span>[ FINALE ]</span>
             </div>
             <div class="ending-inner">
@@ -423,7 +359,7 @@
               <div class="ending-summary">
                 <div class="summary-item">
                   <span class="sum-icon">🪞</span>
-                  <div><strong>PCOS & PCOD Grove:</strong> Prepared concrete lab test questions and stopped judging body changes.</div>
+                  <div><strong>The Changing Mirror:</strong> Prepared empowering healthcare questions and stopped judging bodily fluctuations.</div>
                 </div>
                 <div class="summary-item">
                   <span class="sum-icon">🌙</span>
@@ -435,8 +371,8 @@
                 </div>
               </div>
               <div class="ending-btn-group">
-                <button id="btn-replay" class="y2k-btn pink-btn">🌸 Stroll the Garden Again</button>
-                <button id="btn-ending-journal" class="y2k-btn lavender-btn">📖 View Saved Pocket Cards</button>
+                <button id="btn-replay" class="y2k-btn pink-btn">🌸 Stroll the Blooming Garden</button>
+                <button id="btn-ending-journal" class="y2k-btn lavender-btn">📖 View Field Journal</button>
               </div>
             </div>
           </div>
@@ -444,11 +380,11 @@
 
       </div> <!-- /game-viewport-wrapper -->
 
-      <!-- Retro Bottom Statusbar -->
+      <!-- Slim, Unobtrusive Status Bar -->
       <div class="window-statusbar">
         <span class="status-left">🌿 Garden: Serene & Cozy</span>
         <span class="status-center" id="status-hint">Tip: Walk near objects and press [E] to interact</span>
-        <span class="status-right" id="status-music-state">Audio: On (Click 🔊 to mute)</span>
+        <span class="status-right" id="status-music-state">Audio: On (M to mute)</span>
       </div>
     </div>
   </div>
