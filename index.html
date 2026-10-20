@@ -33,7 +33,7 @@
 
       <!-- Main Game Viewport -->
       <div class="game-viewport-wrapper">
-        <canvas id="game-canvas" width="640" height="480"></canvas>
+        <canvas id="game-canvas" width="640" height="480" tabindex="0" aria-label="Bleuming pixel adventure. Use A and D to move, Space to jump, and Q to shift reality."></canvas>
 
         <!-- Compact Contextual Interaction Prompt -->
         <div id="interaction-prompt" class="hidden">
@@ -410,6 +410,7 @@
         </section>
         <nav class="hub-nav" aria-label="Desktop">
           <button class="selected" data-screen="home">⌂ <span>My desktop</span></button>
+          <button data-screen="adventure">▶ <span>GLITCH//GIRL</span></button>
           <button data-screen="worlds">◉ <span>CD player</span></button>
           <button data-screen="minigames">▦ <span>Mini games</span></button>
           <button data-screen="realtalk">◈ <span>Real Talk</span></button>
@@ -428,13 +429,26 @@
     <div id="hub-modal" class="hub-modal hidden" role="dialog" aria-modal="true"><div class="hub-modal-card"><button class="hub-modal-close" data-action="close-modal" aria-label="Close">×</button><div id="hub-modal-content"></div></div></div>
   </div>
   <div id="level-ui" class="level-ui hidden" aria-live="polite">
-    <div class="hub-level-hud"><span class="hub-level-chip" id="level-world-title">CD World</span><span class="hub-level-chip" id="level-count">✦ — / —</span><button class="hub-mini-btn" data-action="pause" style="pointer-events:auto">Ⅱ Pause</button></div>
+    <div class="hub-level-hud"><span class="hub-level-chip" id="level-world-title">CD World</span><span class="hub-level-chip" id="level-count">✦ — / —</span><button class="hub-mini-btn adventure-only hidden" data-action="shift-reality" style="pointer-events:auto">Q · Shift</button><button class="hub-mini-btn adventure-only hidden" data-action="interact-adventure" style="pointer-events:auto">E · Interact</button><button class="hub-mini-btn adventure-only hidden" data-action="adventure-hint" style="pointer-events:auto">H · Hint</button><button class="hub-mini-btn" data-action="pause" style="pointer-events:auto">Ⅱ Pause</button></div>
     <span id="level-objective" class="level-objective"></span>
     <span id="level-toast" class="level-toast"></span>
+    <span id="adventure-nihi-line" class="adventure-nihi-line hidden"></span>
     <div class="hub-level-help">Move: WASD / arrows · Jump: Space / ↑ · Reach the portal</div>
+    <div class="adventure-touch-controls" aria-label="Touch game controls">
+      <div class="adventure-dpad"><button data-hold="left" aria-label="Move left">◀</button><button data-hold="right" aria-label="Move right">▶</button></div>
+      <div class="adventure-action-pad"><button data-hold="jump" aria-label="Jump">JUMP</button><button data-action="shift-reality" aria-label="Shift reality">SHIFT</button><button data-action="interact-adventure" aria-label="Interact">TALK</button><button data-action="adventure-hint" aria-label="Ask Nihi for a hint">HINT</button></div>
+    </div>
   </div>
   <div id="level-modal" class="hub-modal hidden" role="dialog" aria-modal="true">
     <div class="hub-modal-card"><button class="hub-modal-close" data-action="resume-level" aria-label="Close">×</button><div class="hub-eyebrow">CD PLAYER</div><h2 id="level-modal-title" class="hub-heading">Adventure complete!</h2><p id="level-modal-copy" class="hub-subtitle">A new keepsake has been added to your room.</p><div class="hub-action-row"><button class="hub-card-button" data-action="resume-level">Resume</button><button class="hub-card-button lavender" data-action="restart-level">Replay CD</button><button class="hub-card-button mint" data-action="leave-level">Back to desktop</button></div></div>
+  </div>
+  <div id="adventure-dialog" class="adventure-dialog hidden" role="dialog" aria-modal="true" aria-labelledby="adventure-dialog-title">
+    <section class="adventure-dialog-card">
+      <div class="hub-eyebrow" id="adventure-dialog-phase">PIXEL PLAZA · A MOMENT</div>
+      <h2 id="adventure-dialog-title">A crowded arcade</h2>
+      <p id="adventure-dialog-copy"></p>
+      <div id="adventure-dialog-choices" class="adventure-dialog-choices"></div>
+    </section>
   </div>
   <div id="calm-ui" class="calm-ui hidden" aria-label="Quiet meadow">
     <div class="calm-note"><strong>A quiet place</strong><span>Wander with ← → / A D, or just watch the clouds.</span></div>
@@ -445,5 +459,6 @@
   <script src="game.js"></script>
   <script src="hub.js"></script>
   <script src="real-talk.js"></script>
+  <script src="glitch-adventure.js"></script>
 </body>
 </html>

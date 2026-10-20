@@ -11,11 +11,13 @@ window.BLEUMING_HUB_MODE = true;
   const petCtx = petCanvas.getContext('2d');
   const levelUI = document.getElementById('level-ui');
   const levelModal = document.getElementById('level-modal');
+  const levelModalActions = levelModal.querySelector('.hub-action-row').innerHTML;
   const BASE_PROFILE = {
     version: 1, unlockedWorlds: ['petalbyte'], completed: [], inventory: [],
     bests: {}, relationship: 0, companionPromptSeen: false, companionPromptDisabled: false, preferences: { theme: 'sugar', activities: ['platform', 'memory', 'rhythm'], difficulty: 'relaxed', story: [], wellbeing: false, aiPersonalization: false, aiChat: false },
     equipped: { nihi: 'none', player: 'pink', wallpaper: 'sugar' },
-    cosmetics: ['pink'], room: { decor: ['starter-poster'] }, memoryBest: 0, rhythmBest: 0
+    cosmetics: ['pink'], room: { decor: ['starter-poster'] }, memoryBest: 0, rhythmBest: 0,
+    adventure: { checkpoint: 0, collected: [], solved: {}, gateOpen: false, encounterChoice: '', completed: false, bestSeconds: null }
   };
   let profile = loadProfile();
   let firstBoot = false;
@@ -36,6 +38,9 @@ window.BLEUMING_HUB_MODE = true;
   let currentActivity = 'platform';
   let levelRequestToken = 0;
   let groundingStep = 0;
+  let adventure = null;
+  let adventureDialogOpen = false;
+  let lastNihiLine = '';
   const keys = Object.create(null);
 
   const WORLD_TEMPLATES = {
@@ -111,6 +116,12 @@ window.BLEUMING_HUB_MODE = true;
       p.room={decor:Array.isArray(raw.room?.decor)?Array.from(new Set(raw.room.decor.filter(x=>['starter-poster','petal-poster','moon-lamp','rhythm-trophy'].includes(x)))):['starter-poster']};
       p.memoryBest = Number.isInteger(raw.memoryBest) ? Math.max(0,Math.min(3,raw.memoryBest)) : 0;
       p.rhythmBest = Number.isInteger(raw.rhythmBest) ? Math.max(0,Math.min(12,raw.rhythmBest)) : 0;
+      const a=raw.adventure&&typeof raw.adventure==='object'?raw.adventure:{};
+      p.adventure={checkpoint:[0,850,1290].includes(a.checkpoint)?a.checkpoint:0,
+        collected:Array.isArray(a.collected)?Array.from(new Set(a.collected.filter(id=>['plaza-star','arcade-ticket','echo-flower','memory-shard','sky-sticker'].includes(id)))):[],
+        solved:a.solved&&typeof a.solved==='object'?Object.fromEntries(Object.entries(a.solved).filter(([k,v])=>['bridge','lift','terminal','router','encounter','skywalk'].includes(k)&&!!v)): {},
+        gateOpen:!!a.gateOpen,encounterChoice:['boundary','ask','redirect'].includes(a.encounterChoice)?a.encounterChoice:'',
+        completed:!!a.completed,bestSeconds:Number.isFinite(a.bestSeconds)?Math.max(0,Math.floor(a.bestSeconds)):null};
       return p;
     } catch (error) { console.error('Saved game data was unreadable; starting a safe new local profile.', error); return clone(BASE_PROFILE); }
   }
@@ -187,10 +198,11 @@ window.BLEUMING_HUB_MODE = true;
   function renderHubPage(nextPage) {
     page=nextPage||page;
     document.querySelectorAll('.hub-nav [data-screen]').forEach(btn=>btn.classList.toggle('selected',btn.dataset.screen===page));
-    const titles={home:'My desktop',worlds:'CD player',minigames:'Mini games',realtalk:'Real Talk',album:'Collectible album',room:'Customize room',settings:'Settings & preferences'};
+    const titles={home:'My desktop',adventure:'GLITCH//GIRL',worlds:'CD player',minigames:'Mini games',realtalk:'Real Talk',album:'Collectible album',room:'Customize room',settings:'Settings & preferences'};
     document.getElementById('hub-window-title').textContent=titles[page]||titles.home;
-    document.getElementById('hub-controls-hint').innerHTML=page==='realtalk'?'Click a response · <kbd>TAB</kbd> + <kbd>ENTER</kbd> also works':'<kbd>WASD</kbd> move <kbd>SPACE</kbd> jump';
+    document.getElementById('hub-controls-hint').innerHTML=page==='realtalk'?'Click a response · <kbd>TAB</kbd> + <kbd>ENTER</kbd> also works':page==='adventure'?'<kbd>A/D</kbd> move · <kbd>SPACE</kbd> jump · <kbd>Q</kbd> shift':'<kbd>WASD</kbd> move <kbd>SPACE</kbd> jump';
     if(page==='home') renderHome();
+    if(page==='adventure') renderAdventurePage();
     if(page==='worlds') renderWorlds();
     if(page==='minigames') renderMinigames();
     if(page==='realtalk'&&window.RealTalk) window.RealTalk.render(content,()=>renderHubPage('home'));
@@ -205,6 +217,17 @@ window.BLEUMING_HUB_MODE = true;
       <div class="hub-card-grid"><article class="hub-card"><div class="hub-eyebrow">CD LIBRARY</div><h3>${unlocked} ${unlocked===1?'world':'worlds'} unlocked</h3><p>${profile.completed.length} adventures completed · ${profile.inventory.length} keepsakes in your album</p><button class="hub-card-button lavender" data-action="open-worlds">Browse discs</button></article><article class="hub-card"><div class="hub-eyebrow">A FRIENDLY HELLO</div><h3>Hey, you’re here. What sounds good?</h3><p>Play, wander, talk, or keep exploring your desktop. No mood check needed.</p><button class="hub-card-button mint" data-action="open-companion-menu">Ask Nihi</button></article></div>
       <section class="rt-home-prompt"><div><div class="hub-eyebrow">NEW PLAYABLE MODE</div><h2>Real Talk</h2><p>Try different ways through a tricky social moment. Choices shape the next scene, and every path can be replayed.</p></div><button class="hub-card-button" data-action="navigate" data-page="realtalk">Enter Real Talk →</button></section>
       <h2 class="hub-section-title">RECENT SIGNALS</h2><div class="hub-card"><p>${profile.completed.length?`You have cleared ${profile.completed.map(worldTitle).join(' and ')}. Your next disc is ready.`:'The CD player has two worlds in its collection. The moon disc unlocks when you clear Petalbyte Woods.'}</p></div>`;
+    content.insertAdjacentHTML('afterbegin',`<section class="rt-home-prompt glitch-home-prompt"><div><div class="hub-eyebrow">NEW PLAYABLE ADVENTURE</div><h2>GLITCH//GIRL: Pixel Plaza</h2><p>Run, jump, and shift into the hidden reality. Nihi is coming with you.</p></div><button class="hub-card-button" data-action="navigate" data-page="adventure">${profile.adventure.completed?'Replay':'Play'} Pixel Plaza →</button></section>`);
+  }
+  function renderAdventurePage() {
+    const a=profile.adventure||BASE_PROFILE.adventure;
+    const gallery=window.GlitchAdventure?window.GlitchAdventure.gallery(a):[];
+    const found=gallery.filter(item=>item.unlocked).length;
+    const solved=['bridge','lift','router'].filter(id=>a.solved&&a.solved[id]).length;
+    const best=a.bestSeconds===null?'—':`${Math.floor(a.bestSeconds/60)}:${String(a.bestSeconds%60).padStart(2,'0')}`;
+    content.innerHTML=`<section class="glitch-hero"><div class="glitch-skyline" aria-hidden="true"><i></i><i></i><i></i><i></i><b>PIXEL<br>PLAZA</b></div><div class="glitch-copy"><div class="hub-eyebrow">BLEUMING.EXE · GLITCH//GIRL</div><h1>Pixel Plaza is splitting in two.</h1><p>Switch between NORMAL and GLITCH to cross a missing street, ride a reality-shifting lift, and restore the arcade router. Nihi follows along.</p><div class="hub-action-row"><button class="hub-card-button" data-action="${a.checkpoint?'continue-adventure':'start-adventure'}">${a.checkpoint?'Continue from checkpoint':'Start Pixel Plaza'}</button>${a.completed?'<button class="hub-card-button lavender" data-action="replay-adventure">Replay the area</button>':''}</div><p class="glitch-controls"><kbd>A</kbd><kbd>D</kbd> move · <kbd>SPACE</kbd> jump · <kbd>Q</kbd> shift · <kbd>E</kbd> interact</p></div></section>
+      <div class="hub-card-grid glitch-stats"><article class="hub-card"><div class="hub-eyebrow">SIGNAL PUZZLES</div><h3>${solved} solved</h3><p>Three plaza puzzles use different changes in the world's geometry.</p></article><article class="hub-card"><div class="hub-eyebrow">PLAZA GALLERY</div><h3>${found} / ${gallery.length} keepsakes</h3><p>Secret fragments stay unlocked across replays.</p></article><article class="hub-card"><div class="hub-eyebrow">BEST CLEAR</div><h3>${best}</h3><p>${a.completed?'Fastest Pixel Plaza clear on this device.':'The timer starts when you enter the plaza.'}</p></article></div>
+      <h2 class="hub-section-title">PLAZA GALLERY</h2><div class="glitch-gallery">${gallery.map(item=>`<article class="glitch-sticker ${item.unlocked?'unlocked':''}"><span>${item.unlocked?(item.secret?'✦':'◆'):'?'}</span><strong>${item.unlocked?item.name:'Signal unknown'}</strong><small>${item.unlocked?(item.secret?'Secret keepsake · permanent unlock':'Keepsake · permanent unlock'):'Find it somewhere in Pixel Plaza'}</small></article>`).join('')}</div>`;
   }
   function worldTitle(id) { return id==='moonmall'?'Moon Mall After Hours':'Petalbyte Woods'; }
   function renderWorlds() {
@@ -268,7 +291,10 @@ window.BLEUMING_HUB_MODE = true;
   }
   function resetPreferences() { profile.preferences=clone(BASE_PROFILE.preferences); save(); applyTheme('sugar'); renderHubPage('settings'); status('Preferences reset. Your progress and collection are unchanged.'); }
   function applyTheme(theme) { const t=THEMES[theme]||THEMES.sugar; hub.style.setProperty('--wallpaper',t.sky1); hub.style.background=`radial-gradient(ellipse at 80% 8%,rgba(255,255,255,.9),transparent 29%),linear-gradient(145deg,${t.sky1},${t.sky2} 58%,#f2d2eb)`; }
-  function reducedMotion() { try { return localStorage.getItem('bleuming_reduced_motion')==='true'; } catch (_) { return false; } }
+  function reducedMotion() {
+    try { const saved=localStorage.getItem('bleuming_reduced_motion');if(saved==='true')return true;if(saved==='false')return false; } catch (_) {}
+    return !!(window.matchMedia&&window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+  }
 
   function validateLevel(candidate) {
     if(!candidate||!['petalbyte','moonmall'].includes(candidate.worldId)||!['petalbyte_run','moonmall_hops'].includes(candidate.layoutId)) return false;
@@ -297,6 +323,116 @@ window.BLEUMING_HUB_MODE = true;
     } catch(error) { console.warn('AI level suggestion unavailable; using the authored CD layout.',error); return {worldId,theme:profile.preferences.theme,difficulty:profile.preferences.difficulty,narrativeIntro:localIntro(worldId)}; }
   }
   function localIntro(worldId) { if(profile.preferences.story.includes('friendship'))return 'Nihi saved you the best spot on the path. Let us wander together.';if(profile.preferences.story.includes('self-expression'))return 'The world is full of colors that do not match. Perfect.';if(profile.preferences.story.includes('mysteries'))return 'A curious signal is hiding somewhere ahead. Shall we find it?';return WORLD_TEMPLATES[worldId].narrativeIntro; }
+  function syncAdventureHud() {
+    if(!adventure)return;
+    const puzzleCount=['bridge','lift','router'].filter(id=>adventure.solved[id]).length;
+    document.getElementById('level-count').textContent=`✦ ${adventure.collected.length} / ${window.GlitchAdventure.COLLECTIBLES.length}`;
+    document.getElementById('level-objective').textContent=`${adventure.reality.toUpperCase()} · ${puzzleCount} / 3 puzzles · ${Math.floor(adventure.timeMs/1000)}s`;
+    if(adventure.toastMs>0)document.getElementById('level-toast').textContent=adventure.toast;
+    const line=document.getElementById('adventure-nihi-line');
+    if(line&&lastNihiLine!==adventure.nihiLine){line.textContent=`NIHI: ${adventure.nihiLine}`;lastNihiLine=adventure.nihiLine;}
+  }
+  function persistAdventure() { if(!adventure||!window.GlitchAdventure)return;profile.adventure=window.GlitchAdventure.snapshot(adventure);save(); }
+  function adventureModal(title, copy, phase, buttons) {
+    clearGameKeys();adventureDialogOpen=true;if(adventure)adventure.paused=true;
+    levelUI.inert=true;document.getElementById('desktop-container').inert=true;
+    document.getElementById('adventure-dialog-phase').textContent=phase;
+    document.getElementById('adventure-dialog-title').textContent=title;
+    document.getElementById('adventure-dialog-copy').textContent=copy;
+    document.getElementById('adventure-dialog-choices').innerHTML=buttons.map(({id,label,detail})=>`<button class="adventure-choice" data-action="${id}"><strong>${label}</strong>${detail?`<span>${detail}</span>`:''}</button>`).join('');
+    document.getElementById('adventure-dialog').classList.remove('hidden');document.getElementById('adventure-dialog-choices').querySelector('button')?.focus();
+  }
+  function closeAdventureDialog() { adventureDialogOpen=false;document.getElementById('adventure-dialog').classList.add('hidden');levelUI.inert=false;document.getElementById('desktop-container').inert=false;if(adventure)adventure.paused=false;clearGameKeys();canvas.focus(); }
+  function startAdventure(replay) {
+    if(!window.GlitchAdventure)return;
+    adventure=window.GlitchAdventure.createRun(profile.adventure,{replay:!!replay});
+    mode='adventure';state.screen='glitch-girl';adventureDialogOpen=false;lastNihiLine='';
+    document.body.classList.add('adventure-mode');hub.classList.add('hidden');document.getElementById('desktop-container').inert=false;
+    levelUI.classList.remove('hidden');levelUI.inert=false;levelModal.classList.add('hidden');levelModal.querySelector('.hub-action-row').innerHTML=levelModalActions;document.getElementById('adventure-dialog').classList.add('hidden');
+    levelUI.inert=false;levelModal.querySelector('.hub-modal-close').classList.remove('hidden');levelUI.querySelector('[data-action="pause"]').classList.remove('hidden');document.getElementById('adventure-nihi-line').classList.remove('hidden');
+    document.getElementById('level-world-title').textContent='PIXEL PLAZA';
+    document.getElementById('level-objective').textContent='Find the signal router · meet Rae';
+    document.getElementById('level-toast').textContent=adventure.toast;
+    document.querySelector('.hub-level-help').textContent='A/D move · SPACE jump · Q shift · E interact · H hint';
+    document.querySelectorAll('.adventure-only').forEach(el=>el.classList.remove('hidden'));
+    syncAdventureHud();window.soundEngine.ensureContext();window.soundEngine.startBgm();
+    if(!replay&&!profile.adventure.checkpoint)adventureModal('The desktop has a back door.','A cursor blinks on its own. On the other side, Pixel Plaza flickers between the street you know and a hidden version full of remembered platforms. Nihi follows your signal.','OPENING SEQUENCE',[{id:'begin-adventure',label:'Enter the plaza',detail:'Start moving right away.'},{id:'skip-adventure-intro',label:'Skip the opening',detail:'Jump into the playable street.'}]);
+    else { status('Back to Pixel Plaza. Your checkpoint and keepsakes are saved.');say('I kept your signal warm. Let’s go.','excited'); }
+  }
+  function beginAdventurePlay() { if(!adventure)return;closeAdventureDialog();adventure.toast='Tutorial: move with A/D, jump with SPACE, and press Q to reveal the bridge.';adventure.toastMs=4800;syncAdventureHud(); }
+  function showAdventureEncounter() {
+    if(!adventure)return;
+    const event=window.GlitchAdventure.interact(adventure);
+    if(!event)return;
+    if(event.type==='encounter')return adventureModal('The arcade crowd','Mira has just told Rae, in front of the group, that they look “so much better” now. Rae goes quiet. People are watching to see what you do.','A BRANCHING ENCOUNTER',[
+      {id:'encounter-boundary',label:'Set a boundary with Mira',detail:'Ask the room to leave comments about bodies out of it. The plaza route opens.'},
+      {id:'encounter-ask',label:'Ask Rae what they want',detail:'Rae chooses the quieter skywalk and reveals a hidden route.'},
+      {id:'encounter-redirect',label:'Follow Rae’s lead and change the subject',detail:'Rae asks for a subject change and shares an arcade ticket.'}
+    ]);
+    if(event.type==='terminal'){persistAdventure();syncAdventureHud();window.soundEngine.playTone(760,.12,'square',.03);}
+    if(event.type==='portal'){
+      if(adventure.encounterDone&&adventure.gateOpen){return showAdventureResults();}
+      adventure.toast='The exit signal is dim. There is someone at the arcade entrance.';adventure.toastMs=2500;
+    }
+  }
+  function chooseAdventure(choice) {
+    if(!adventure||!adventureDialogOpen)return;
+    const event=window.GlitchAdventure.chooseEncounter(adventure,choice);
+    closeAdventureDialog();
+    if(event){persistAdventure();say(adventure.nihiLine,'supportive');window.soundEngine.playBloomFanfare();syncAdventureHud();}
+  }
+  function showAdventureResults() {
+    if(!adventure)return;
+    adventure.ending=true;adventure.completed=true;
+    adventure.nihiMood='excited';adventure.nihiLine='Pixel Plaza is back in tune. That was a very good adventure.';
+    const completedSeconds=Math.floor(adventure.timeMs/1000);
+    adventure.bestSeconds=adventure.bestSeconds===null?completedSeconds:Math.min(adventure.bestSeconds,completedSeconds);
+    persistAdventure();mode='adventure';adventure.paused=true;clearGameKeys();
+    const seconds=Math.floor(adventure.timeMs/1000);const m=Math.floor(seconds/60),s=String(seconds%60).padStart(2,'0');
+    document.getElementById('level-modal-title').textContent='Pixel Plaza restored';
+    document.getElementById('level-modal-copy').textContent=`You solved ${Object.values(adventure.solved).filter(Boolean).length} signal puzzles, found ${adventure.collected.length} keepsakes, and helped Rae choose what happened next. Clear time ${m}:${s}.`;
+    const actions=levelModal.querySelector('.hub-action-row');
+    actions.innerHTML='<button class="hub-card-button" data-action="continue-adventure">Continue exploring</button><button class="hub-card-button lavender" data-action="replay-adventure">Replay Pixel Plaza</button><button class="hub-card-button mint" data-action="leave-level">Return to desktop</button>';
+    levelModal.querySelector('.hub-modal-close').classList.add('hidden');levelUI.querySelector('[data-action="pause"]').classList.add('hidden');levelUI.inert=true;document.getElementById('desktop-container').inert=true;say(adventure.nihiLine,'excited');
+    levelModal.classList.remove('hidden');levelModal.querySelector('.hub-action-row button')?.focus();
+  }
+  function continueAdventureToPage() {
+    clearGameKeys();mode='hub';state.screen='hub';adventureDialogOpen=false;document.getElementById('adventure-dialog').classList.add('hidden');
+    document.body.classList.remove('adventure-mode');document.getElementById('desktop-container').inert=true;levelUI.inert=false;levelUI.classList.add('hidden');levelModal.classList.add('hidden');hub.classList.remove('hidden');
+    levelModal.querySelector('.hub-modal-close').classList.remove('hidden');levelUI.querySelector('[data-action="pause"]').classList.remove('hidden');document.getElementById('adventure-nihi-line').classList.add('hidden');
+    levelModal.querySelector('.hub-action-row').innerHTML=levelModalActions;renderHubPage('adventure');
+  }
+  function shiftAdventure() {
+    if(mode!=='adventure'||!adventure||adventureDialogOpen||!levelModal.classList.contains('hidden'))return;
+    const reality=window.GlitchAdventure.shift(adventure);window.soundEngine.playTone(reality==='glitch'?780:480,.09,'square',.04);syncAdventureHud();
+  }
+  function showAdventureHint() {
+    if(mode!=='adventure'||!adventure||adventureDialogOpen||!levelModal.classList.contains('hidden'))return;
+    window.GlitchAdventure.hint(adventure);syncAdventureHud();say(adventure.nihiLine,'curious');
+  }
+  function clearGameKeys() { Object.keys(keys).forEach(key=>{keys[key]=false;});keys.adventureJumpPending=false; }
+  function finishAdventureAction(action) {
+    if(action==='begin-adventure'||action==='skip-adventure-intro'){return beginAdventurePlay();}
+    if(action==='encounter-boundary')return chooseAdventure('boundary');
+    if(action==='encounter-ask')return chooseAdventure('ask');
+    if(action==='encounter-redirect')return chooseAdventure('redirect');
+  }
+  function adventureStep(dt) {
+    if(mode!=='adventure'||!adventure)return;
+    if(adventureDialogOpen||!levelModal.classList.contains('hidden')){gameCtx.clearRect(0,0,640,480);window.GlitchAdventure.draw(gameCtx,adventure,{reducedMotion:reducedMotion()});return;}
+    const events=window.GlitchAdventure.update(adventure,{left:!!(keys.ArrowLeft||keys.a||keys.A),right:!!(keys.ArrowRight||keys.d||keys.D),jump:!!keys.adventureJumpPending},dt);
+    keys.adventureJumpPending=false;
+    for(const event of events){
+      if(event.type==='collect'){window.soundEngine.playPickup();persistAdventure();say(adventure.nihiLine,'happy');}
+      if(event.type==='checkpoint'){persistAdventure();window.soundEngine.playTone(650,.15,'triangle',.035);}
+      if(event.type==='puzzle'){persistAdventure();window.soundEngine.playTone(900,.16,'triangle',.04);say(adventure.nihiLine,'excited');}
+      if(event.type==='respawn')say(adventure.nihiLine,'supportive');
+      if(event.type==='jump')window.soundEngine.playTone(520,.07,'square',.02);
+      if(event.type==='complete'){persistAdventure();showAdventureResults();window.soundEngine.playBloomFanfare();}
+    }
+    if(adventure.toastMs>0)document.getElementById('level-toast').textContent=adventure.toast;
+    syncAdventureHud();window.GlitchAdventure.draw(gameCtx,adventure,{reducedMotion:reducedMotion()});
+  }
   async function startWorld(worldId) {
     if(!profile.unlockedWorlds.includes(worldId)) return;
     const suggestion=await requestPersonalization(worldId); if(!suggestion) return;
@@ -309,7 +445,7 @@ window.BLEUMING_HUB_MODE = true;
     const d=difficultySettings(level.difficulty);
     player={x:level.spawn.x,y:level.spawn.y,w:22,h:30,vx:0,vy:0,speed:d.speed,jump:d.jump,gravity:d.gravity,grounded:false,invulnerable:0,stars:[],lastSafeX:level.spawn.x};
     level.collectibles.forEach((c,i)=>player.stars.push({id:i,x:c[0],y:c[1],collected:false}));
-    hub.classList.add('hidden');document.getElementById('desktop-container').inert=false;levelUI.classList.remove('hidden');levelModal.classList.add('hidden');
+    hub.classList.add('hidden');document.body.classList.remove('adventure-mode');document.querySelectorAll('.adventure-only').forEach(el=>el.classList.add('hidden'));levelModal.querySelector('.hub-action-row').innerHTML=levelModalActions;levelModal.querySelector('.hub-modal-close').classList.remove('hidden');levelUI.querySelector('[data-action="pause"]').classList.remove('hidden');levelUI.inert=false;document.getElementById('adventure-nihi-line').classList.add('hidden');document.querySelector('.hub-level-help').textContent='Move: WASD / arrows · Jump: Space / ↑ · Reach the portal';document.getElementById('desktop-container').inert=false;levelUI.classList.remove('hidden');levelModal.classList.add('hidden');
     document.getElementById('level-world-title').textContent=level.title;
     document.getElementById('level-objective').textContent=`Find ${level.required} signal stars`;
     document.getElementById('level-count').textContent='✦ 0 / '+level.required;
@@ -332,7 +468,7 @@ window.BLEUMING_HUB_MODE = true;
     status(`CD cleared in ${time}s. A new keepsake is waiting in Customize room.`);
   }
   function unlock(item) { if(!profile.cosmetics.includes(item)){profile.cosmetics.push(item);profile.inventory.push(item==='moon-crown'?'moon-bead':'star-fragment');} }
-  function returnToHub() { mode='hub';state.screen='hub';document.getElementById('desktop-container').inert=true;hub.classList.remove('hidden');levelUI.classList.add('hidden');levelModal.classList.add('hidden');renderHubPage('home');save(); }
+  function returnToHub() { mode='hub';state.screen='hub';clearGameKeys();adventureDialogOpen=false;document.getElementById('adventure-dialog').classList.add('hidden');document.body.classList.remove('adventure-mode');document.querySelectorAll('.adventure-only').forEach(el=>el.classList.add('hidden'));levelModal.querySelector('.hub-action-row').innerHTML=levelModalActions;levelModal.querySelector('.hub-modal-close').classList.remove('hidden');levelUI.querySelector('[data-action="pause"]').classList.remove('hidden');levelUI.inert=false;document.getElementById('adventure-nihi-line').classList.add('hidden');document.querySelector('.hub-level-help').textContent='Move: WASD / arrows · Jump: Space / ↑ · Reach the portal';document.getElementById('desktop-container').inert=true;hub.classList.remove('hidden');levelUI.classList.add('hidden');levelModal.classList.add('hidden');renderHubPage('home');save(); }
   function restartLevel() { if(!level)return; const id=currentWorldId;startWorld(id); }
   function respawn() { player.x=lastCheckpoint;player.y=level.spawn.y;player.vx=0;player.vy=0;player.invulnerable=70;cameraX=Math.max(0,player.x-220);document.getElementById('level-toast').textContent='Checkpoint! The portal is still waiting.'; }
   function updateLevel(dt) {
@@ -433,6 +569,13 @@ window.BLEUMING_HUB_MODE = true;
   }
   function handleAction(button) {
     const action=button.dataset.action;
+    if(action==='start-adventure')return startAdventure(false);
+    if(action==='continue-adventure')return mode==='adventure'&&adventure?.ending?continueAdventureToPage():startAdventure(false);
+    if(action==='replay-adventure')return startAdventure(true);
+    if(action==='shift-reality')return shiftAdventure();
+    if(action==='adventure-hint')return showAdventureHint();
+    if(action==='interact-adventure')return showAdventureEncounter();
+    if(action==='begin-adventure'||action==='skip-adventure-intro'||action.startsWith('encounter-'))return finishAdventureAction(action);
     if(action==='navigate')return renderHubPage(button.dataset.page);
     if(action==='open-companion-menu')return showCompanionChoices();
     if(action==='choice-play'){
@@ -475,9 +618,9 @@ window.BLEUMING_HUB_MODE = true;
     if(action==='finish-setup')return finishSetup(false);
     if(action==='sound'){const isOn=window.soundEngine.toggleMute();button.textContent=isOn?'♫ Sound':'♫ Muted';return;}
     if(action==='fullscreen'){if(document.fullscreenElement)document.exitFullscreen();else document.documentElement.requestFullscreen().catch(e=>console.warn('Fullscreen unavailable.',e));return;}
-    if(action==='pause'){levelModal.classList.remove('hidden');document.getElementById('level-modal-title').textContent='Take a breather';document.getElementById('level-modal-copy').textContent='Your progress is saved as you play. Resume whenever you are ready.';return;}
-    if(action==='resume-level'){levelModal.classList.add('hidden');return;}
-    if(action==='restart-level'){levelModal.classList.add('hidden');return restartLevel();}
+    if(action==='pause'){clearGameKeys();if(mode==='adventure'&&adventure)adventure.paused=true;levelUI.inert=true;document.getElementById('desktop-container').inert=true;levelModal.classList.remove('hidden');document.getElementById('level-modal-title').textContent='Take a breather';document.getElementById('level-modal-copy').textContent=mode==='adventure'?'Your Pixel Plaza run is paused. Resume whenever you are ready.':'Your progress is saved as you play. Resume whenever you are ready.';levelModal.querySelector('.hub-action-row button')?.focus();return;}
+    if(action==='resume-level'){levelModal.classList.add('hidden');levelUI.inert=false;document.getElementById('desktop-container').inert=false;if(mode==='adventure'&&adventure)adventure.paused=false;clearGameKeys();canvas.focus();return;}
+    if(action==='restart-level'){levelModal.classList.add('hidden');return mode==='adventure'?startAdventure(true):restartLevel();}
     if(action==='leave-level'){levelModal.classList.add('hidden');return returnToHub();}
     if(action==='memory-tile')return memoryTap(Number(button.dataset.tile));
   }
@@ -491,17 +634,38 @@ window.BLEUMING_HUB_MODE = true;
   document.getElementById('calm-ui').addEventListener('click',event=>{const btn=event.target.closest('[data-action]');if(btn)handleAction(btn);});
   levelUI.addEventListener('click',event=>{const btn=event.target.closest('[data-action]');if(btn)handleAction(btn);});
   levelModal.addEventListener('click',event=>{const btn=event.target.closest('[data-action]');if(btn)handleAction(btn);});
+  document.getElementById('adventure-dialog').addEventListener('click',event=>{const btn=event.target.closest('[data-action]');if(btn)handleAction(btn);});
+  levelUI.addEventListener('pointerdown',event=>{
+    const btn=event.target.closest('[data-hold]');if(!btn||mode!=='adventure')return;
+    event.preventDefault();btn.setPointerCapture?.(event.pointerId);
+    if(btn.dataset.hold==='left')keys.ArrowLeft=true;
+    if(btn.dataset.hold==='right')keys.ArrowRight=true;
+    if(btn.dataset.hold==='jump'){keys.adventureJumpPending=true;keys.adventureTouchJump=true;}
+  });
+  const releaseTouchControl=event=>{const btn=event.target.closest?.('[data-hold]');if(!btn)return;if(btn.dataset.hold==='left')keys.ArrowLeft=false;if(btn.dataset.hold==='right')keys.ArrowRight=false;if(btn.dataset.hold==='jump')keys.adventureTouchJump=false;};
+  levelUI.addEventListener('pointerup',releaseTouchControl);levelUI.addEventListener('pointercancel',releaseTouchControl);levelUI.addEventListener('lostpointercapture',releaseTouchControl);
   window.addEventListener('keydown',event=>{
+    const wasDown=!!keys[event.key];
     keys[event.key]=true;
+    if(mode==='adventure'&&!event.repeat){
+      if(['q','Q'].includes(event.key)){event.preventDefault();shiftAdventure();}
+      if(['e','E'].includes(event.key)){event.preventDefault();showAdventureEncounter();}
+      if(['h','H'].includes(event.key)){event.preventDefault();showAdventureHint();}
+      if([' ','ArrowUp','w','W'].includes(event.key)&&!wasDown){event.preventDefault();keys.adventureJumpPending=true;}
+    }
     if(mode==='level'&&(event.key===' '||event.key==='ArrowUp'||event.key==='ArrowDown'))event.preventDefault();
     if(mode==='rhythm'&&(event.key===' '||event.key==='Enter')){event.preventDefault();rhythmTap();}
-    if(event.key==='Escape'&&mode==='level'){levelModal.classList.toggle('hidden');}
+    if(event.key==='Escape'&&mode==='adventure'&&adventureDialogOpen){closeAdventureDialog();}
+    else if(event.key==='Escape'&&mode==='adventure'&&!adventure?.ending){if(levelModal.classList.contains('hidden'))handleAction({dataset:{action:'pause'}});else handleAction({dataset:{action:'resume-level'}});}
+    else if(event.key==='Escape'&&mode==='level'){levelModal.classList.toggle('hidden');}
     if(event.key==='Escape'&&mode==='calm')handleAction({dataset:{action:'calm-back'}});
   });
   window.addEventListener('keyup',event=>{keys[event.key]=false;});
+  window.addEventListener('blur',clearGameKeys);
   function engineLoop(now) { requestAnimationFrame(engineLoop);const dt=lastTime?Math.min(50,now-lastTime):16.667;lastTime=now;hubTime+=dt/16.667;
     if(mode==='level'&&level&&!levelModal.classList.contains('hidden'))return;
     if(mode==='level'&&level){updateLevel(dt);drawLevel();}
+    else if(mode==='adventure')adventureStep(dt);
     else if(mode==='calm'){if(keys.ArrowLeft||keys.a||keys.A)calmX=Math.max(0,calmX-1.1);if(keys.ArrowRight||keys.d||keys.D)calmX=Math.min(260,calmX+1.1);drawCalm();}
     else if(mode==='hub'){renderPet();}
   }

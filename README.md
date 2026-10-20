@@ -1,6 +1,6 @@
 # Bleuming.exe — Y2K Pet Adventure
 
-Bleuming.exe is a dependency-free pixel-art game built on the project's existing Canvas 2D renderer. The retro desktop hub includes Nihi, a CD library, two side-scrolling platform worlds, rhythm and memory mini-games, a collectible album, room and character cosmetics, settings, and local saves. Real Talk adds three replayable, branching social-skill scenes to the hub. The existing game assets and audio synthesizer are reused; no new runtime dependency or framework migration is required.
+Bleuming.exe is a dependency-free pixel-art game built on the project's existing Canvas 2D renderer. The retro desktop hub includes Nihi, the GLITCH//GIRL Pixel Plaza action-adventure, the existing CD library, arcade mini-games, a collectible album, room and character cosmetics, settings, and local saves. Pixel Plaza has three reality-shift puzzles, a branching character encounter, checkpoints, a replayable keepsake gallery, and keyboard and touch controls. Real Talk remains available as three replayable branching scenes. The existing application entry point and audio engine are reused; no new runtime dependency or framework migration is required.
 
 ## Run locally
 
@@ -14,6 +14,8 @@ Open `http://localhost:8000`. No package installation or build step is needed. C
 
 - Desktop navigation: mouse, Tab, Enter, or Space
 - Platform levels: WASD or arrow keys to move; Space or Up to jump
+- GLITCH//GIRL: A/D or arrows to move; Space or Up to jump; Q to shift reality; E to interact; H to ask Nihi for an optional hint
+- Touch devices: hold the direction and jump buttons; tap Shift, Talk, or Hint
 - Pause a level: Pause button or Escape
 - Sound and fullscreen: buttons in the desktop header
 - Real Talk: inspect a scene, then choose a response. Tab and Enter work with the keyboard.
