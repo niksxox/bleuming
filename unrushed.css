@@ -38,3 +38,22 @@
 .unrushed-home-note{margin-top:16px;color:#eadcf5;font-size:12px;letter-spacing:.02em}
 
 .hub-sidebar .pet-card{display:none!important}
+
+.unrushed-library-heading{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;margin:26px 0 12px}
+.unrushed-library-heading .hub-section-title{margin:8px 0 0}
+.unrushed-library-heading>p{color:var(--hub-muted,#d8cde9);font-size:12px}
+.unrushed-game-library{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.unrushed-game-card{overflow:hidden;display:flex;flex-direction:column;min-width:0;border:1px solid rgba(222,203,255,.35);border-radius:16px;background:rgba(255,255,255,.055);box-shadow:0 8px 24px rgba(25,18,48,.1)}
+.unrushed-card-art{height:120px;display:flex;align-items:center;justify-content:center;gap:20px;font:36px monospace;color:#fff0cf;overflow:hidden;position:relative}
+.unrushed-card-art span:nth-child(2){font-size:48px;transform:translateY(-9px)}
+.unrushed-art-world{background:radial-gradient(circle at 50% 80%,#8d81bb 0%,transparent 45%),linear-gradient(135deg,#20254d,#397c91)}
+.unrushed-art-mirror{background:radial-gradient(circle at 45% 40%,#f9d5ef 0%,transparent 26%),linear-gradient(135deg,#6a4c85,#d29cc5)}
+.unrushed-art-moon{background:radial-gradient(circle at 70% 30%,#fff0bd 0%,transparent 12%),linear-gradient(135deg,#20254d,#7775a8)}
+.unrushed-art-echo{background:radial-gradient(circle at 20% 70%,#c3f0e7 0%,transparent 26%),linear-gradient(135deg,#453d70,#ba8cb4)}
+.unrushed-card-copy{padding:16px;display:flex;flex-direction:column;align-items:flex-start;gap:8px;flex:1}
+.unrushed-card-copy h3{font-size:16px;margin:0;color:#fff2fb}
+.unrushed-card-copy p{font-size:13px;line-height:1.65;color:#e1d7f0;margin:0 0 8px}
+.unrushed-card-copy .hub-card-button{margin-top:auto}
+.unrushed-coming{font-size:11px;color:#d4c4e9;border:1px solid rgba(224,206,255,.25);padding:7px 9px;border-radius:9px;background:rgba(255,255,255,.04)}
+.unrushed-library-footnote{font-size:11px;line-height:1.7;color:#cfc2e2;margin:18px 0 0}
+@media(max-width:650px){.unrushed-game-library{grid-template-columns:1fr}.unrushed-library-heading{align-items:flex-start;flex-direction:column}.unrushed-card-art{height:96px}}
