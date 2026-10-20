@@ -3,15 +3,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bleuming — A Cozy Women's Wellbeing Adventure</title>
-  <!-- Pixel font for headings + Clean, readable Quicksand for dialogue & journal -->
+  <title>Bleuming.exe — Y2K Pet Adventure</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="hub.css">
+  <link rel="stylesheet" href="realtalk.css">
 </head>
 <body>
-  <!-- Retro desktop shell container -->
   <div id="desktop-container">
     <div class="retro-window main-window">
       <!-- Retro Window Titlebar -->
@@ -23,6 +23,8 @@
         <div class="titlebar-controls">
           <button id="btn-sound-toggle" class="titlebar-btn" title="Toggle Audio (M)">🔊</button>
           <button id="btn-journal-toggle" class="titlebar-btn" title="Open Field Journal (J)">📖 Journal</button>
+          <button id="btn-fullscreen" class="titlebar-btn" title="Toggle full screen">⛶ Full Screen</button>
+          <button id="btn-journey-preferences" class="titlebar-btn" title="Edit story preferences">Journeys</button>
           <button class="titlebar-btn" id="btn-window-min">_</button>
           <button class="titlebar-btn" id="btn-window-heart">♥</button>
           <button class="titlebar-btn close-btn" id="btn-window-close">×</button>
@@ -31,7 +33,6 @@
 
       <!-- Main Game Viewport -->
       <div class="game-viewport-wrapper">
-        <!-- 640x480 pixel art canvas -->
         <canvas id="game-canvas" width="640" height="480"></canvas>
 
         <!-- Compact Contextual Interaction Prompt -->
@@ -41,25 +42,39 @@
 
         <!-- Compact In-Game HUD -->
         <div id="game-hud" class="hud-layer hidden">
-          <!-- Top-Left: Compact Quest Panel -->
+          <!-- Top-Left: Day + Quest Panel -->
           <div class="hud-panel quest-hud">
+            <div class="hud-day-badge" id="hud-day-badge">Day 1 · Morning</div>
             <div class="hud-tag">CURRENT QUEST</div>
             <div id="hud-quest-title">Explore the Garden</div>
             <div id="hud-quest-sub">Look for faded blossoms & speak with Nihi.</div>
+            <div class="garden-progress-bar">
+              <div class="progress-fill" id="garden-progress-fill" style="width: 0%"></div>
+              <span class="progress-label" id="garden-progress-label">Garden: 0%</span>
+            </div>
           </div>
 
-          <!-- Top-Right: Neat Inventory Strip -->
+          <!-- Top-Right: Inventory Strip -->
           <div class="hud-panel inventory-hud">
             <div class="hud-tag">POCKET FINDS</div>
-            <div class="inventory-slots">
-              <div class="inv-slot" id="slot-0" title="Dewdrop Crystal (Checking in on sensations)">🌸</div>
-              <div class="inv-slot" id="slot-1" title="Calming Chamomile (Rest is required)">🌿</div>
-              <div class="inv-slot" id="slot-2" title="Sunstone Sprout (You deserve care)">✨</div>
+            <div class="inventory-slots" id="inventory-slots">
+              <div class="inv-slot empty" id="slot-0">·</div>
+              <div class="inv-slot empty" id="slot-1">·</div>
+              <div class="inv-slot empty" id="slot-2">·</div>
+              <div class="inv-slot empty" id="slot-3">·</div>
+              <div class="inv-slot empty" id="slot-4">·</div>
+              <div class="inv-slot empty" id="slot-5">·</div>
             </div>
           </div>
         </div>
 
-        <!-- Dialogue Box (Clean, readable text + Real pixel art avatar) -->
+        <!-- Side Quest Tracker (bottom-left) -->
+        <div id="side-quest-tracker" class="hidden">
+          <div class="side-quest-tag">GARDEN TASKS</div>
+          <div id="side-quest-list"></div>
+        </div>
+
+        <!-- Dialogue Box -->
         <div id="dialogue-box" class="dialogue-container hidden">
           <div class="dialogue-portrait-frame">
             <img id="dialogue-portrait-img" src="assets/nihi_happy.jpg" alt="Portrait" class="portrait-avatar">
@@ -71,185 +86,190 @@
           </div>
         </div>
 
-        <!-- ================================================================= -->
-        <!-- NIHI'S FIELD JOURNAL (Illustrated Storybook Design)               -->
-        <!-- ================================================================= -->
+        <!-- Nihi Chat Panel (AI Companion) -->
+        <div id="nihi-chat-panel" class="game-modal hidden">
+          <div class="modal-box retro-window nihi-chat-window">
+            <div class="window-titlebar mini">
+              <span>💬 Chat with Nihi — A Little Something for Today</span>
+              <button class="modal-close-btn" id="close-nihi-chat">✕</button>
+            </div>
+            <div class="nihi-chat-body">
+              <div class="nihi-chat-portrait">
+                <img src="assets/nihi_happy.jpg" alt="Nihi" id="nihi-chat-portrait-img">
+                <div class="nihi-chat-mood" id="nihi-chat-mood">Nihi is curious today ✨</div>
+              </div>
+              <div class="nihi-chat-messages" id="nihi-chat-messages">
+                <div class="chat-bubble nihi-bubble">Hey! Want to chat, or would you like a little suggestion for today? 🌸</div>
+              </div>
+              <div class="nihi-chat-topics">
+                <div class="chat-topic-label">Quick topics:</div>
+                <div class="chat-topic-btns" id="nihi-topic-btns">
+                  <button class="topic-btn" data-topic="feeling-overwhelmed">Feeling overwhelmed</button>
+                  <button class="topic-btn" data-topic="gentle-routine">Gentle routine</button>
+                  <button class="topic-btn" data-topic="body-symptoms">Understanding my body</button>
+                  <button class="topic-btn" data-topic="self-compassion">Self-compassion</button>
+                  <button class="topic-btn" data-topic="doctor-prep">Preparing for a doctor visit</button>
+                  <button class="topic-btn" data-topic="just-chat">Just chat 💬</button>
+                </div>
+              </div>
+              <div class="nihi-chat-input-row">
+                <input type="text" id="nihi-chat-input" placeholder="Talk to Nihi..." autocomplete="off">
+                <button id="nihi-chat-send" class="y2k-btn pink-btn">Send</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- NIHI'S FIELD JOURNAL -->
         <div id="modal-journal" class="game-modal hidden">
           <div class="journal-book-shell retro-window">
             <div class="window-titlebar mini">
-              <span>📖 Nihi's Field Journal — Illustrated Wellbeing Guide</span>
+              <span>📖 Nihi's Field Journal</span>
               <button class="modal-close-btn" id="close-modal-journal">✕ Close [Esc]</button>
             </div>
             
             <div class="journal-inner-layout">
-              <!-- Left Sidebar: Chapter Nav & Illustration -->
+              <!-- Left Sidebar -->
               <div class="journal-sidebar">
                 <div class="journal-nav-group">
-                  <button class="j-nav-btn active" data-chapter="ch-pcos">
+                  <button class="j-nav-btn active" data-chapter="ch-discoveries">
+                    <span class="j-nav-icon">🌼</span>
+                    <span class="j-nav-title">Discoveries<br><small>Flora & Finds</small></span>
+                  </button>
+                  <button class="j-nav-btn" data-chapter="ch-pcos">
                     <span class="j-nav-icon">🪞</span>
-                    <span class="j-nav-title">1. Changing Mirror<br><small>PCOS & Rhythms</small></span>
+                    <span class="j-nav-title">Changing Mirror<br><small>PCOS & Rhythms</small></span>
                   </button>
                   <button class="j-nav-btn" data-chapter="ch-postpartum">
                     <span class="j-nav-icon">🌙</span>
-                    <span class="j-nav-title">2. Tired Moon<br><small>Postpartum Care</small></span>
+                    <span class="j-nav-title">Tired Moon<br><small>Postpartum Care</small></span>
                   </button>
                   <button class="j-nav-btn" data-chapter="ch-grounding">
                     <span class="j-nav-icon">🌿</span>
-                    <span class="j-nav-title">3. Foggy Forest<br><small>Grounding & Calm</small></span>
+                    <span class="j-nav-title">Foggy Forest<br><small>Grounding & Calm</small></span>
                   </button>
                   <button class="j-nav-btn" data-chapter="ch-saved">
                     <span class="j-nav-icon">💌</span>
-                    <span class="j-nav-title">4. Action Cards<br><small>Your Doctor & Care Prep</small></span>
+                    <span class="j-nav-title">Action Cards<br><small>Care Prep</small></span>
                   </button>
                 </div>
 
                 <div class="journal-art-preview">
                   <img id="journal-hero-img" src="assets/scene_mirror.jpg" alt="Chapter Illustration" class="j-hero-pic">
-                  <div id="journal-hero-caption" class="j-hero-caption">Saffron's Changing Mirror Grove</div>
+                  <div id="journal-hero-caption" class="j-hero-caption">Your Garden Discoveries</div>
                 </div>
               </div>
 
-              <!-- Right Content Area: Illustrated Readable Storybook Cards -->
+              <!-- Right Content Area -->
               <div class="journal-content-area">
-                <!-- Chapter 1: PCOS & PCOD -->
-                <div class="journal-chapter active" id="ch-pcos">
+                <!-- Chapter: Discoveries (NEW) -->
+                <div class="journal-chapter active" id="ch-discoveries">
+                  <div class="chapter-header discoveries-accent">
+                    <h2>Your Garden Discoveries</h2>
+                    <p class="chapter-subtitle">Flora, treasures, and memories collected on your journey</p>
+                  </div>
+                  <div class="journal-card-stack" id="discoveries-list">
+                    <div class="j-card">
+                      <p>Your discoveries will appear here as you explore the garden. Each day brings new things to find! 🌸</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Chapter 1: PCOS -->
+                <div class="journal-chapter" id="ch-pcos">
                   <div class="chapter-header pcos-accent">
                     <h2>Chapter 1: The Changing Mirror</h2>
                     <p class="chapter-subtitle">Understanding Polycystic Ovary Syndrome (PCOS & PCOD) without judgment</p>
                   </div>
-
                   <div class="journal-card-stack">
                     <div class="j-card">
-                      <div class="card-icon-title">
-                        <span class="c-icon">🗓️</span>
-                        <h3>Every Body Has Its Own Rhythm</h3>
-                      </div>
-                      <p>PCOS is an endocrine metabolic condition, not a personal failing. Irregular or missed cycles happen because immature follicles take longer to ovulate—not because you did something wrong.</p>
+                      <div class="card-icon-title"><span class="c-icon">🗓️</span><h3>Every Body Has Its Own Rhythm</h3></div>
+                      <p>PCOS can look different from person to person. Irregular periods, acne, or increased facial or body hair can have several possible causes; noticing a change does not tell you what caused it.</p>
                     </div>
-
                     <div class="j-card">
-                      <div class="card-icon-title">
-                        <span class="c-icon">⚡</span>
-                        <h3>The Metabolic Fatigue Factor</h3>
-                      </div>
-                      <p>Up to 70% of people with PCOS experience insulin resistance. Sudden post-meal crashes, intense sugar cravings, and brain fog are biochemical signals—not a lack of discipline.</p>
+                      <div class="card-icon-title"><span class="c-icon">⚡</span><h3>Noticing What You Experience</h3></div>
+                      <p>You can jot down changes you notice and when they happen. Notes can help you describe your experience, but they cannot diagnose a condition.</p>
                     </div>
-
                     <div class="j-card">
-                      <div class="card-icon-title">
-                        <span class="c-icon">✨</span>
-                        <h3>Notice Patterns, Don't Self-Diagnose</h3>
-                      </div>
-                      <p>Acne, hirsutism, or weight fluctuations can have many causes. A game cannot diagnose you. If symptoms bother you, preparing neutral notes empowers you to partner effectively with a physician.</p>
+                      <div class="card-icon-title"><span class="c-icon">✨</span><h3>Notice Patterns, Don't Self-Diagnose</h3></div>
+                      <p>If something is bothering you, you can choose whether to discuss it with a qualified healthcare professional. PCOS is assessed using a person's history and appropriate evaluation; one test is not right for everyone.</p>
+                      <p class="hub-tiny-note">General educational information, not a diagnosis or personal care plan. See <a href="https://www.acog.org/womens-health/faqs/polycystic-ovary-syndrome-pcos" target="_blank" rel="noopener noreferrer">ACOG</a> and the <a href="https://womenshealth.gov/a-z-topics/polycystic-ovary-syndrome" target="_blank" rel="noopener noreferrer">U.S. Office on Women’s Health</a>.</p>
                     </div>
-
                     <div class="j-card highlight-card">
-                      <div class="card-icon-title">
-                        <span class="c-icon">📋</span>
-                        <h3>Doctor Visit Questions to Take With You</h3>
-                      </div>
+                      <div class="card-icon-title"><span class="c-icon">📋</span><h3>Doctor Visit Questions to Take With You</h3></div>
                       <ul class="j-bullet-list">
-                        <li>"Could we check my LH/FSH ratio and evaluate an ultrasound?"</li>
-                        <li>"Can we run fasting insulin & glucose to check metabolic sensitivity?"</li>
-                        <li>"Are there specific medical treatments for my skin and androgen symptoms?"</li>
+                        <li>"What might be causing the changes I've noticed?"</li>
+                        <li>"What information would help us understand what's going on?"</li>
+                        <li>"What options could help with the symptoms that bother me?"</li>
                       </ul>
                     </div>
                   </div>
                 </div>
 
-                <!-- Chapter 2: Postpartum Wellbeing -->
+                <!-- Chapter 2: Postpartum -->
                 <div class="journal-chapter" id="ch-postpartum">
                   <div class="chapter-header postpartum-accent">
                     <h2>Chapter 2: The Tired Moon</h2>
                     <p class="chapter-subtitle">Emotional, physical, and maternal recovery after childbirth</p>
                   </div>
-
                   <div class="journal-card-stack">
                     <div class="j-card">
-                      <div class="card-icon-title">
-                        <span class="c-icon">🌧️</span>
-                        <h3>Baby Blues vs. Postpartum Depression</h3>
-                      </div>
-                      <p>The 'Baby Blues' affects up to 80% of mothers for 1–2 weeks as estrogen and progesterone rapidly drop. Postpartum Depression (PPD) or Anxiety (PPA) is more persistent, intense, and requires professional support.</p>
+                      <div class="card-icon-title"><span class="c-icon">🌧️</span><h3>Baby Blues vs. Postpartum Depression</h3></div>
+                      <p>Some people experience short-lived worry, sadness, or tiredness after birth. More intense, persistent, or disruptive sadness or anxiety can be a reason to seek support. A game cannot tell what is happening for any one person.</p>
                     </div>
-
                     <div class="j-card">
-                      <div class="card-icon-title">
-                        <span class="c-icon">🛡️</span>
-                        <h3>Postpartum Conditions are Medical, Not Moral</h3>
-                      </div>
+                      <div class="card-icon-title"><span class="c-icon">🛡️</span><h3>Postpartum Conditions are Medical, Not Moral</h3></div>
                       <p>Experiencing emotional numbness, exhaustion, or anxiety does not mean you don't love your baby. PPD is a treatable medical condition, never a measure of your capability as a parent.</p>
                     </div>
-
                     <div class="j-card">
-                      <div class="card-icon-title">
-                        <span class="c-icon">💭</span>
-                        <h3>Scary Intrusive Thoughts</h3>
-                      </div>
-                      <p>Fleeting 'what-if' flashes of harm are common symptoms of postpartum anxiety. They reflect heightened protective distress—not hidden intent or poor parenting.</p>
+                      <div class="card-icon-title"><span class="c-icon">💭</span><h3>Scary Intrusive Thoughts</h3></div>
+                      <p>Unwanted intrusive thoughts can feel frightening. A thought alone does not establish a diagnosis or intent. If thoughts worry you, you deserve a private conversation with a qualified professional; if you feel anyone is in immediate danger, seek urgent local help.</p>
                     </div>
-
                     <div class="j-card highlight-card">
-                      <div class="card-icon-title">
-                        <span class="c-icon">🤝</span>
-                        <h3>Ask for Tangible Practical Help</h3>
-                      </div>
+                      <div class="card-icon-title"><span class="c-icon">🤝</span><h3>Ask for Tangible Practical Help</h3></div>
                       <p>Don't wait for vague offers. Ask trusted friends: <em>"Could you drop off dinner on Tuesday?"</em> or <em>"Could you watch the crib for 90 minutes so I can take an uninterrupted shower and nap?"</em></p>
                     </div>
                   </div>
+                  <p class="hub-tiny-note">General information only. See the <a href="https://www.cdc.gov/reproductive-health/depression/index.html" target="_blank" rel="noopener noreferrer">U.S. Centers for Disease Control and Prevention</a> and <a href="https://mchb.hrsa.gov/national-maternal-mental-health-hotline/faq" target="_blank" rel="noopener noreferrer">National Maternal Mental Health Hotline FAQs</a>.</p>
                 </div>
 
-                <!-- Chapter 3: Overwhelm & Grounding -->
+                <!-- Chapter 3: Grounding -->
                 <div class="journal-chapter" id="ch-grounding">
                   <div class="chapter-header grounding-accent">
                     <h2>Chapter 3: The Foggy Forest</h2>
                     <p class="chapter-subtitle">Sensory grounding when emotions feel overwhelming</p>
                   </div>
-
                   <div class="journal-card-stack">
                     <div class="j-card">
-                      <div class="card-icon-title">
-                        <span class="c-icon">🌿</span>
-                        <h3>Permission to Pause</h3>
-                      </div>
-                      <p>When thoughts spiral, pushing through panic rarely helps. Stopping to breathe is not quitting—it gives your nervous system a chance to down-regulate from fight-or-flight.</p>
+                      <div class="card-icon-title"><span class="c-icon">🌿</span><h3>Permission to Pause</h3></div>
+                      <p>When thoughts feel busy, you can pause if that feels useful. Breathing exercises are optional; you do not have to calm down or complete a task.</p>
                     </div>
-
                     <div class="j-card">
-                      <div class="card-icon-title">
-                        <span class="c-icon">🧘</span>
-                        <h3>The 5-4-3-2-1 Sensory Reset</h3>
-                      </div>
+                      <div class="card-icon-title"><span class="c-icon">🧘</span><h3>The 5-4-3-2-1 Sensory Reset</h3></div>
                       <p>Re-anchor your focus to tangible physical realities: notice 3 soothing colors, feel 2 gentle textures (warm sweater, cool breeze), and speak 1 kind affirmation to yourself.</p>
                     </div>
-
                     <div class="j-card">
-                      <div class="card-icon-title">
-                        <span class="c-icon">🕊️</span>
-                        <h3>Feelings are Weather</h3>
-                      </div>
-                      <p>Fog rolls into the garden, but it always rolls back out. Naming an emotion without self-criticism takes away its power to overwhelm you.</p>
+                      <div class="card-icon-title"><span class="c-icon">🕊️</span><h3>Feelings are Weather</h3></div>
+                      <p>Some people find that naming an emotion makes a little room around it. You do not have to name it, fix it, or feel differently right now.</p>
                     </div>
                   </div>
                 </div>
 
-                <!-- Chapter 4: Prepared Notes & Cards -->
+                <!-- Chapter 4: Saved Cards -->
                 <div class="journal-chapter" id="ch-saved">
                   <div class="chapter-header saved-accent">
                     <h2>Chapter 4: Your Prepared Notes & Action Items</h2>
-                    <p class="chapter-subtitle">Personalized healthcare prep cards created during your garden journey</p>
+                    <p class="chapter-subtitle">Fictional examples of questions and practical requests; nothing here is saved from your chat.</p>
                   </div>
-
                   <div class="journal-card-stack">
                     <div class="j-card doctor-summary-card">
                       <h3>🩺 Saffron's Doctor Visit Prep Card</h3>
                       <ul id="saved-pcos-list" class="j-bullet-list">
-                        <li>"Could we test fasting glucose and insulin sensitivity?"</li>
-                        <li>"Can we evaluate an ultrasound for ovarian follicle patterns?"</li>
-                        <li>"Are there medical treatments for my skin and androgen fluctuations?"</li>
+                        <li>"What might be causing the changes I've noticed?"</li>
+                        <li>"What information would help us understand what's going on?"</li>
+                        <li>"What options could help with the symptoms that bother me?"</li>
                       </ul>
                     </div>
-
                     <div class="j-card support-summary-card">
                       <h3>🌙 Maya's Practical Support Requests</h3>
                       <ul id="saved-ppd-list" class="j-bullet-list">
@@ -257,29 +277,25 @@
                         <li>"Watch the baby for 2 hours so I can sleep uninterrupted."</li>
                       </ul>
                     </div>
-
                     <div class="j-card helpline-card">
-                      <h3>📞 Confidential Support Lifelines</h3>
-                      <p>• <strong>Postpartum Support International:</strong> Call/Text 1-800-944-4773</p>
-                      <p>• <strong>National Maternal Mental Health Hotline:</strong> 1-833-852-6262 (24/7)</p>
-                      <p>• <strong>Crisis Text Line:</strong> Text HOME to 741741</p>
+                      <h3>📞 Optional U.S.-based support resources</h3>
+                      <p>• <strong><a href="https://postpartum.net/get-help/" target="_blank" rel="noopener noreferrer">Postpartum Support International HelpLine:</a></strong> Call 1-800-944-4773 or text HELP to 800-944-4773 (English). It is not an emergency line.</p>
+                      <p>• <strong><a href="https://mchb.hrsa.gov/programs-impact/national-maternal-mental-health-hotline" target="_blank" rel="noopener noreferrer">National Maternal Mental Health Hotline:</a></strong> Call or text 1-833-852-6262, any time.</p>
+                      <p>• <strong><a href="https://988lifeline.org/get-help/" target="_blank" rel="noopener noreferrer">988 Suicide &amp; Crisis Lifeline:</a></strong> Call or text 988 in the United States and its territories. Elsewhere, contact local emergency or crisis support.</p>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <!-- Journal Footer -->
             <div class="journal-footer">
-              <span class="footer-tip">💡 Tip: Press [J] or [Esc] anytime to return to your garden stroll.</span>
-              <button id="btn-close-journal" class="y2k-btn pink-btn">🌸 Back to Garden</button>
+              <span class="footer-tip">Optional stories • Close this journal to return to the desktop.</span>
+              <button id="btn-close-journal" class="y2k-btn pink-btn">← Back to desktop</button>
             </div>
           </div>
         </div>
 
-        <!-- ================================================================= -->
-        <!-- SENSORY GROUNDING INTERACTIVE MINI-GAME                           -->
-        <!-- ================================================================= -->
+        <!-- SENSORY GROUNDING MINI-GAME -->
         <div id="modal-grounding" class="game-modal hidden">
           <div class="modal-box retro-window wide-modal">
             <div class="window-titlebar mini">
@@ -293,12 +309,8 @@
                   <div id="breathing-bubble" class="breathing-bubble">Breathe In...</div>
                 </div>
               </div>
-
-              <div class="grounding-interactive-grid" id="grounding-grid">
-                <!-- Grounding tiles generated dynamically -->
-              </div>
+              <div class="grounding-interactive-grid" id="grounding-grid"></div>
               <p id="grounding-instruction" class="grounding-hint">Click 3 pastel colors to gently center your senses.</p>
-
               <div class="modal-footer">
                 <button id="btn-finish-grounding" class="y2k-btn mint-btn hidden">✨ Clear the Mist & Restore the Grove ✨</button>
               </div>
@@ -306,9 +318,7 @@
           </div>
         </div>
 
-        <!-- ================================================================= -->
-        <!-- TITLE SCREEN OVERLAY                                              -->
-        <!-- ================================================================= -->
+        <!-- TITLE SCREEN -->
         <div id="screen-title" class="screen-overlay">
           <div class="title-card retro-window">
             <div class="window-titlebar mini">
@@ -320,59 +330,53 @@
                 <img src="assets/title_banner.jpg" alt="Bleuming Title Banner" class="title-main-banner">
               </div>
               <h1 class="game-logo">Bleuming</h1>
-              <div class="game-subtitle">A cozy pixel-art journey of gentle listening & care</div>
-              <p class="tagline-text">
-                "You don't have to be the same as everyone else to deserve care."
-              </p>
+              <div class="game-subtitle">A little garden. A little magic.</div>
               <div class="title-btn-group">
-                <button id="btn-start-game" class="y2k-btn pink-btn bounce-btn">✨ Start Garden Journey ✨</button>
-                <button id="btn-open-journal-title" class="y2k-btn lavender-btn">📖 Open Field Journal</button>
+                <button id="btn-start-game" class="y2k-btn pink-btn bounce-btn">Start Playing</button>
+                <button id="btn-continue-game" class="y2k-btn lavender-btn hidden">🌿 Continue Journey (Day <span id="continue-day">1</span>)</button>
+                <button id="btn-new-game" class="y2k-btn mint-btn hidden">🔄 Start Fresh</button>
+                <button id="btn-journey-settings" class="y2k-btn lavender-btn">Journey Preferences</button>
               </div>
-              <div class="instructions-panel">
-                <div class="keys-guide">
-                  <span><strong>Move:</strong> [W][A][S][D] or [Arrows]</span>
-                  <span><strong>Interact:</strong> [E] or [Space]</span>
-                  <span><strong>Journal:</strong> [J]</span>
-                  <span><strong>Mute:</strong> [M]</span>
-                </div>
-              </div>
+              <div class="instructions-panel"><div class="keys-guide">Move: WASD / arrows · Interact: E</div></div>
             </div>
           </div>
         </div>
 
-        <!-- ================================================================= -->
-        <!-- ENDING SCREEN OVERLAY                                             -->
-        <!-- ================================================================= -->
-        <div id="screen-ending" class="screen-overlay hidden">
+        <div id="screen-journeys" class="screen-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="journey-heading">
+          <section class="journey-panel retro-window">
+            <div class="window-titlebar mini"><span>Make this garden yours</span></div>
+            <div class="journey-content">
+              <h2 id="journey-heading">What would you like your garden to explore?</h2>
+              <p>Choose stories you’d like to see. These are content preferences, not health labels. Change them anytime.</p>
+              <div id="journey-cards" class="journey-grid"></div>
+              <div class="journey-actions">
+                <button id="btn-journey-clear" class="y2k-btn lavender-btn">Clear saved preferences</button>
+                <button id="btn-journey-skip" class="y2k-btn lavender-btn">Skip for now</button>
+                <button id="btn-journey-save" class="y2k-btn pink-btn">Continue to the garden</button>
+              </div>
+              <small>Guest demo · saved in this browser only · no account or password required.</small>
+            </div>
+          </section>
+        </div>
+
+        <!-- MILESTONE CELEBRATION (replaces fixed ending) -->
+        <div id="screen-milestone" class="screen-overlay hidden">
           <div class="ending-card retro-window wide-modal">
             <div class="window-titlebar mini">
-              <span>💖 The Garden is in Full Bloom 💖</span>
-              <span>[ FINALE ]</span>
+              <span>💖 A Garden Milestone 💖</span>
+              <span>[ CELEBRATION ]</span>
             </div>
             <div class="ending-inner">
               <div class="ending-art-wrapper">
-                <img src="assets/ending_scene.jpg" alt="Ending Scene" class="ending-main-banner">
+                <img src="assets/ending_scene.jpg" alt="Milestone Scene" class="ending-main-banner">
               </div>
-              <div class="ending-quote">
+              <div id="milestone-title" class="ending-quote">
                 "You don't have to be the same as everyone else to deserve care."
               </div>
-              <div class="ending-summary">
-                <div class="summary-item">
-                  <span class="sum-icon">🪞</span>
-                  <div><strong>The Changing Mirror:</strong> Prepared empowering healthcare questions and stopped judging bodily fluctuations.</div>
-                </div>
-                <div class="summary-item">
-                  <span class="sum-icon">🌙</span>
-                  <div><strong>The Tired Moon:</strong> Destigmatized postpartum depression and delegated real support for Maya.</div>
-                </div>
-                <div class="summary-item">
-                  <span class="sum-icon">🌿</span>
-                  <div><strong>The Foggy Forest:</strong> Grounded emotional overwhelm through 5-4-3-2-1 sensory awareness.</div>
-                </div>
-              </div>
+              <div id="milestone-summary" class="ending-summary"></div>
               <div class="ending-btn-group">
-                <button id="btn-replay" class="y2k-btn pink-btn">🌸 Stroll the Blooming Garden</button>
-                <button id="btn-ending-journal" class="y2k-btn lavender-btn">📖 View Field Journal</button>
+                <button id="btn-milestone-continue" class="y2k-btn pink-btn">🌸 Continue Exploring the Garden</button>
+                <button id="btn-milestone-journal" class="y2k-btn lavender-btn">📖 View Field Journal</button>
               </div>
             </div>
           </div>
@@ -380,18 +384,66 @@
 
       </div> <!-- /game-viewport-wrapper -->
 
-      <!-- Slim, Unobtrusive Status Bar -->
+      <!-- Status Bar -->
       <div class="window-statusbar">
-        <span class="status-left">🌿 Garden: Serene & Cozy</span>
+        <span class="status-left" id="status-garden">🌿 Garden: Serene & Cozy</span>
         <span class="status-center" id="status-hint">Tip: Walk near objects and press [E] to interact</span>
         <span class="status-right" id="status-music-state">Audio: On (M to mute)</span>
       </div>
     </div>
   </div>
 
-  <!-- Audio Synthesizer Engine -->
+  <div id="bleuming-hub" class="hub-shell hidden" aria-live="polite">
+    <header class="hub-topbar">
+      <div class="hub-brand"><span class="hub-brand-mark">B</span><span><strong>BLEUMING.EXE</strong><small>MAGICAL DESKTOP • v3.2</small></span></div>
+      <div class="hub-top-actions"><span id="hub-save-status">Saved on this device</span><button class="hub-mini-btn" data-action="sound">♫ Sound</button><button class="hub-mini-btn" data-action="fullscreen">⛶ Full screen</button></div>
+    </header>
+    <div class="hub-layout">
+      <aside class="hub-sidebar">
+        <section class="pet-card">
+          <div class="pet-screen"><canvas id="pet-preview" width="96" height="96" aria-label="Nihi companion"></canvas><span class="pet-sparkle">✦</span></div>
+          <h2>Nihi <span id="hub-mood">✦ curious</span></h2>
+          <p id="hub-pet-line">A tiny signal buddy, ready to explore.</p>
+          <button class="hub-action-btn" data-action="pet">Boop Nihi</button>
+          <button class="hub-secondary-btn" data-action="chat">Chat with Nihi</button>
+          <button id="hub-grounding" class="hub-secondary-btn hidden" data-action="grounding">Take a tiny pause</button>
+        </section>
+        <nav class="hub-nav" aria-label="Desktop">
+          <button class="selected" data-screen="home">⌂ <span>My desktop</span></button>
+          <button data-screen="worlds">◉ <span>CD player</span></button>
+          <button data-screen="minigames">▦ <span>Mini games</span></button>
+          <button data-screen="realtalk">◈ <span>Real Talk</span></button>
+          <button data-screen="album">✧ <span>Collection</span></button>
+          <button data-screen="room">▤ <span>Customize room</span></button>
+          <button data-screen="settings">⚙ <span>Settings</span></button>
+        </nav>
+        <div class="hub-version">NO STREAKS. NO RUSH. JUST PLAY.</div>
+      </aside>
+      <main class="hub-main">
+        <div class="hub-windowbar"><span id="hub-window-title">My desktop</span><span><i></i><i></i><i></i></span></div>
+        <div id="hub-content" class="hub-content"></div>
+      </main>
+    </div>
+    <footer class="hub-statusbar"><span id="hub-status-message">Welcome back to your little corner of the internet.</span><span id="hub-controls-hint"><kbd>WASD</kbd> move <kbd>SPACE</kbd> jump</span></footer>
+    <div id="hub-modal" class="hub-modal hidden" role="dialog" aria-modal="true"><div class="hub-modal-card"><button class="hub-modal-close" data-action="close-modal" aria-label="Close">×</button><div id="hub-modal-content"></div></div></div>
+  </div>
+  <div id="level-ui" class="level-ui hidden" aria-live="polite">
+    <div class="hub-level-hud"><span class="hub-level-chip" id="level-world-title">CD World</span><span class="hub-level-chip" id="level-count">✦ — / —</span><button class="hub-mini-btn" data-action="pause" style="pointer-events:auto">Ⅱ Pause</button></div>
+    <span id="level-objective" class="level-objective"></span>
+    <span id="level-toast" class="level-toast"></span>
+    <div class="hub-level-help">Move: WASD / arrows · Jump: Space / ↑ · Reach the portal</div>
+  </div>
+  <div id="level-modal" class="hub-modal hidden" role="dialog" aria-modal="true">
+    <div class="hub-modal-card"><button class="hub-modal-close" data-action="resume-level" aria-label="Close">×</button><div class="hub-eyebrow">CD PLAYER</div><h2 id="level-modal-title" class="hub-heading">Adventure complete!</h2><p id="level-modal-copy" class="hub-subtitle">A new keepsake has been added to your room.</p><div class="hub-action-row"><button class="hub-card-button" data-action="resume-level">Resume</button><button class="hub-card-button lavender" data-action="restart-level">Replay CD</button><button class="hub-card-button mint" data-action="leave-level">Back to desktop</button></div></div>
+  </div>
+  <div id="calm-ui" class="calm-ui hidden" aria-label="Quiet meadow">
+    <div class="calm-note"><strong>A quiet place</strong><span>Wander with ← → / A D, or just watch the clouds.</span></div>
+    <div class="calm-actions"><button class="hub-mini-btn" id="calm-sound" data-action="calm-sound">♫ Sound on</button><button class="hub-mini-btn" data-action="calm-back">Back to desktop</button></div>
+  </div>
+
   <script src="audio.js"></script>
-  <!-- Main Game Engine -->
   <script src="game.js"></script>
+  <script src="hub.js"></script>
+  <script src="real-talk.js"></script>
 </body>
 </html>

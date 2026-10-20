@@ -90,9 +90,17 @@ const assets = {
 
 let loadedCount = 0;
 const totalAssets = 5;
+let gameLoopStarted = false;
+
+function isImageReady(image) {
+  return image.complete && image.naturalWidth > 0;
+}
 
 function loadGameAssets(onComplete) {
-  const checkDone = () => {
+  const completed = new Set();
+  const checkDone = (img) => {
+    if (completed.has(img)) return;
+    completed.add(img);
     loadedCount++;
     if (loadedCount >= totalAssets) {
       state.assetsLoaded = true;
@@ -100,11 +108,10 @@ function loadGameAssets(onComplete) {
     }
   };
 
-  assets.mapBase.onload = checkDone;
-  assets.mapBloom.onload = checkDone;
-  assets.playerSheet.onload = checkDone;
-  assets.nihiSheet.onload = checkDone;
-  assets.npcSheet.onload = checkDone;
+  [assets.mapBase,assets.mapBloom,assets.playerSheet,assets.nihiSheet,assets.npcSheet].forEach(function(img){
+    img.onload = () => checkDone(img);
+    img.onerror = () => { console.error('Bleuming asset failed; drawing procedural fallback:', img.src); checkDone(img); };
+  });
 
   assets.mapBase.src = 'assets/map_base.png';
   assets.mapBloom.src = 'assets/map_blooming.png';
@@ -200,7 +207,7 @@ ctx.imageSmoothingEnabled = false;
 
 // Draw Player from Sprite Sheet
 function drawPlayerSprite(px, py, dir, frame) {
-  if (!state.assetsLoaded) return;
+  if (!isImageReady(assets.playerSheet)) { drawFallbackCharacter(px, py, '#F3A7C6', 'player'); return; }
   const dirRows = { down: 0, up: 1, left: 2, right: 3 };
   const row = dirRows[dir] || 0;
   const col = frame % 3;
@@ -218,7 +225,7 @@ function drawPlayerSprite(px, py, dir, frame) {
 
 // Draw Nihi from Sprite Sheet
 function drawNihiSprite(nx, ny, stateIndex, frame, floatAngle) {
-  if (!state.assetsLoaded) return;
+  if (!isImageReady(assets.nihiSheet)) { drawFallbackCharacter(nx, ny, '#B7A7E8', 'nihi'); return; }
   const bob = Math.sin(floatAngle) * 3;
   const col = frame % 2;
   const row = Math.min(4, Math.max(0, stateIndex));
@@ -235,11 +242,46 @@ function drawNihiSprite(nx, ny, stateIndex, frame, floatAngle) {
 
 // Draw NPCs from Sprite Sheet
 function drawNPCs() {
-  if (!state.assetsLoaded) return;
+  const showSaffron=selectedJourneys.includes('pcos_pcod') || state.quests.current==='mirror_pcos';
+  const showMaya=selectedJourneys.includes('postpartum') || state.quests.current==='postpartum_house';
+  if (!showSaffron && !showMaya) return;
+  if (!isImageReady(assets.npcSheet)) {
+    if(showSaffron) drawFallbackCharacter(state.npcs.saffron.x, state.npcs.saffron.y, '#D95D91', 'S');
+    if(showMaya) drawFallbackCharacter(state.npcs.maya.x, state.npcs.maya.y, '#A9D6EF', 'M');
+    return;
+  }
   // Saffron (x=0 to 32 on sheet)
-  ctx.drawImage(assets.npcSheet, 0, 0, 32, 48, Math.round(state.npcs.saffron.x - 16), Math.round(state.npcs.saffron.y - 28), 32, 48);
+  if(showSaffron) ctx.drawImage(assets.npcSheet, 0, 0, 32, 48, Math.round(state.npcs.saffron.x - 16), Math.round(state.npcs.saffron.y - 28), 32, 48);
   // Maya (x=32 to 64 on sheet)
-  ctx.drawImage(assets.npcSheet, 32, 0, 32, 48, Math.round(state.npcs.maya.x - 16), Math.round(state.npcs.maya.y - 28), 32, 48);
+  if(showMaya) ctx.drawImage(assets.npcSheet, 32, 0, 32, 48, Math.round(state.npcs.maya.x - 16), Math.round(state.npcs.maya.y - 28), 32, 48);
+}
+
+function drawFallbackCharacter(x, y, color, label) {
+  ctx.fillStyle = '#493044'; ctx.fillRect(Math.round(x-8), Math.round(y-15), 16, 22);
+  ctx.fillStyle = color; ctx.fillRect(Math.round(x-7), Math.round(y-14), 14, 20);
+  ctx.fillStyle = '#FFF4DF'; ctx.fillRect(Math.round(x-5), Math.round(y-12), 3, 3); ctx.fillRect(Math.round(x+2), Math.round(y-12), 3, 3);
+  ctx.fillStyle = '#493044'; ctx.font = '8px sans-serif'; ctx.fillText(label, Math.round(x-3), Math.round(y+2));
+}
+
+function drawFallbackGarden() {
+  ctx.fillStyle='#9BBE91'; ctx.fillRect(0,0,CANVAS_WIDTH,CANVAS_HEIGHT);
+  for(let y=5;y<CANVAS_HEIGHT;y+=12) for(let x=(y%24?4:10);x<CANVAS_WIDTH;x+=14){
+    ctx.fillStyle=((x+y)%3===0)?'rgba(65,105,78,.16)':'rgba(255,244,223,.18)'; ctx.fillRect(x,y,2,2);
+  }
+  ctx.lineCap='round'; ctx.strokeStyle='#FFF0D5'; ctx.lineWidth=40;
+  ctx.beginPath(); ctx.moveTo(95,130); ctx.lineTo(230,220); ctx.lineTo(340,220); ctx.lineTo(505,250); ctx.moveTo(280,220); ctx.lineTo(280,420); ctx.stroke();
+  ctx.strokeStyle='#D9C5A8'; ctx.lineWidth=2; ctx.stroke();
+  ctx.fillStyle='#91CFE0'; ctx.strokeStyle='#493044'; ctx.lineWidth=4;
+  ctx.beginPath();ctx.ellipse(177,350,49,34,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+  ctx.fillStyle='#B7A7E8';ctx.fillRect(70,78,56,40);ctx.fillStyle='#F3A7C6';ctx.beginPath();ctx.moveTo(64,78);ctx.lineTo(98,52);ctx.lineTo(132,78);ctx.fill();
+  ctx.fillStyle='#493044';ctx.fillRect(276,206,48,38);ctx.fillStyle='#A9D6EF';ctx.beginPath();ctx.ellipse(300,220,18,10,0,0,Math.PI*2);ctx.fill();ctx.stroke();
+  [[40,80],[185,46],[398,70],[594,90],[54,268],[572,365],[420,421],[105,420]].forEach(([x,y])=>{
+    ctx.fillStyle='#493044';ctx.fillRect(x-4,y+5,8,13);ctx.fillStyle='#41694E';ctx.beginPath();ctx.arc(x,y,22,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#9BBE91';ctx.fillRect(x-9,y-5,5,5);ctx.fillRect(x+5,y-12,5,5);
+  });
+  [[70,170],[390,175],[435,300],[245,390],[340,350],[520,210]].forEach(([x,y],i)=>{
+    ctx.fillStyle=['#F3A7C6','#FFF4DF','#B7A7E8'][i%3];ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.fill();
+  });
 }
 
 // Draw Collectibles
@@ -461,6 +503,9 @@ function checkCollectibles() {
 function updateInteractables() {
   let found = null;
   for (const obj of interactables) {
+    if ((obj.id === 'saffron' && !selectedJourneys.includes('pcos_pcod') && state.quests.current!=='mirror_pcos')
+      || (obj.id === 'maya' && !selectedJourneys.includes('postpartum') && state.quests.current!=='postpartum_house')
+      || (obj.id === 'forest' && !selectedJourneys.includes('emotional_wellbeing') && state.quests.current!=='foggy_forest')) continue;
     if (Math.hypot(state.player.x - obj.x, state.player.y - obj.y) <= obj.radius) {
       found = obj;
       break;
@@ -571,8 +616,13 @@ function showItemPickupDialogue(item) {
           text: 'Place it into your pocket ✨',
           action: () => {
             if (state.inventory.items.length >= 3 && state.quests.current === 'collect_flora') {
-              state.quests.current = 'mirror_pcos';
-              updateQuestHUD('Visit Saffron at the Mirror', 'Take your 3 gathered flora to the northwest grove.');
+              if(selectedJourneys.includes('pcos_pcod')) {
+                state.quests.current = 'mirror_pcos';
+                updateQuestHUD('Visit Saffron at the Mirror', 'Take your gathered finds to the northwest grove.');
+              } else {
+                state.quests.current = 'free_explore';
+                updateQuestHUD('Garden Explorer', 'Wander, collect, and discover at your own pace.');
+              }
             }
           }
         }
@@ -717,10 +767,10 @@ function handleSaffronInteraction() {
       speaker: 'Saffron',
       choices: [
         {
-          text: '"That unsolicited advice is so dismissive. Your symptoms are medical, not a failure."',
+      text: '"That advice sounds frustrating. You deserve to have your concerns heard."',
           expression: 'happy',
           next: {
-            text: '"Right?! People act like our cycles are effortless clockwork, but PCOS affects insulin, hormones, everything. I want to talk to my doctor, but I always freeze up in the clinic."',
+            text: '"Exactly. Changes like these can have different causes, and I do not want to guess. I would like to write down what I have noticed and ask a healthcare professional."',
             speaker: 'Saffron',
             choices: [
               {
@@ -759,29 +809,16 @@ function handleSaffronInteraction() {
 
 function completePcosQuest() {
   state.quests.mirrorPcosDone = true;
-  state.quests.current = 'postpartum_house';
+  state.quests.current = selectedJourneys.includes('postpartum') ? 'postpartum_house'
+    : selectedJourneys.includes('emotional_wellbeing') ? 'foggy_forest' : 'free_explore';
   state.nihi.stateIndex = 4; // Cheering!
 
   window.soundEngine.playBloomFanfare();
-  updateQuestHUD(
-    'Visit Maya on the Cottage Porch',
-    'Head northeast to the lavender cottage where a new parent is resting.'
-  );
+  updateQuestHUD(state.quests.current === 'postpartum_house' ? 'Visit Maya on the Cottage Porch' : 'Garden Explorer',
+    state.quests.current === 'postpartum_house' ? 'Head northeast to the lavender cottage.' : 'Wander, collect, and discover at your own pace.');
 }
 
 function handleMayaInteraction() {
-  if (!state.quests.mirrorPcosDone) {
-    showDialogue(
-      {
-        text: 'The porch is quiet. Nihi whispers: "Maya is resting with the baby right now. Let\'s check in on Saffron at the mirror first!"',
-        choices: [{ text: '"Let\'s visit Saffron first."' }]
-      },
-      'Nihi',
-      'thoughtful'
-    );
-    return;
-  }
-
   if (state.quests.postpartumDone) {
     showDialogue(
       {
@@ -805,7 +842,7 @@ function handleMayaInteraction() {
       speaker: 'Maya',
       choices: [
         {
-          text: '"Postpartum depression is a medical hormonal drop, Maya. It has zero to do with your love."',
+          text: '"Feeling this way does not make you a bad parent. You deserve support, and you can tell someone you trust how hard this feels."',
           expression: 'concerned',
           next: {
             text: '"Hearing that made my shoulders drop an inch. I was terrified that admitting this meant I was a bad mother. Friends text \'let me know if you need anything\', but I never know what to ask."',
@@ -847,29 +884,15 @@ function handleMayaInteraction() {
 
 function completePostpartumQuest() {
   state.quests.postpartumDone = true;
-  state.quests.current = 'foggy_forest';
+  state.quests.current = selectedJourneys.includes('emotional_wellbeing') ? 'foggy_forest' : 'free_explore';
   state.nihi.stateIndex = 4; // Cheering!
 
   window.soundEngine.playBloomFanfare();
-  updateQuestHUD(
-    'Step into the Misty Thicket',
-    'Head east to the woodland path with Nihi.'
-  );
+  updateQuestHUD(state.quests.current === 'foggy_forest' ? 'Explore the Misty Thicket' : 'Garden Explorer',
+    state.quests.current === 'foggy_forest' ? 'Head east to the woodland path.' : 'Wander, collect, and discover at your own pace.');
 }
 
 function handleForestInteraction() {
-  if (!state.quests.postpartumDone) {
-    showDialogue(
-      {
-        text: 'The thicket path is quiet. Nihi steps back: "Let\'s check on Maya at the cottage porch first before we walk into the thicket."',
-        choices: [{ text: '"Good idea, let\'s visit Maya."' }]
-      },
-      'Nihi',
-      'thoughtful'
-    );
-    return;
-  }
-
   if (state.quests.forestDone) {
     showDialogue(
       {
@@ -1063,7 +1086,7 @@ function handleBenchInteraction() {
 
 function triggerGameFinale() {
   state.screen = 'ending';
-  document.getElementById('screen-ending').classList.remove('hidden');
+  document.getElementById('screen-milestone').classList.remove('hidden');
   window.soundEngine.playBloomFanfare();
 }
 
@@ -1104,6 +1127,9 @@ function setupJournal() {
 }
 
 function openJournalToChapter(chapterId) {
+  if ((chapterId === 'ch-pcos' && !selectedJourneys.includes('pcos_pcod'))
+    || (chapterId === 'ch-postpartum' && !selectedJourneys.includes('postpartum'))
+    || (chapterId === 'ch-grounding' && !selectedJourneys.includes('emotional_wellbeing'))) chapterId='ch-discoveries';
   state.screen = 'modal';
   const modal = document.getElementById('modal-journal');
   modal.classList.remove('hidden');
@@ -1147,6 +1173,15 @@ function updateQuestHUD(title, sub) {
 }
 
 function updateInventoryHUD() {
+  for (let idx = 0; idx < 6; idx++) {
+    const slot = document.getElementById(`slot-${idx}`);
+    if (slot) {
+      slot.textContent = '·';
+      slot.classList.add('empty');
+      slot.classList.remove('collected');
+      slot.title = '';
+    }
+  }
   state.inventory.items.forEach((item, idx) => {
     const slot = document.getElementById(`slot-${idx}`);
     if (slot) {
@@ -1160,8 +1195,13 @@ function updateInventoryHUD() {
 
 function checkQuestProgressAfterDialogue() {
   if (state.quests.current === 'collect_flora' && state.inventory.items.length >= 3) {
-    state.quests.current = 'mirror_pcos';
-    updateQuestHUD('Visit Saffron at the Mirror', 'Take your 3 gathered flora to the northwest grove.');
+    if(selectedJourneys.includes('pcos_pcod')) {
+      state.quests.current = 'mirror_pcos';
+      updateQuestHUD('Visit Saffron at the Mirror', 'Take your gathered finds to the northwest grove.');
+    } else {
+      state.quests.current = 'free_explore';
+      updateQuestHUD('Garden Explorer', 'Wander, collect, and discover at your own pace.');
+    }
   }
 }
 
@@ -1184,6 +1224,7 @@ function setupInput() {
     }
 
     if (e.key === 'j' || e.key === 'J') {
+      if (window.BLEUMING_HUB_MODE) return;
       toggleJournal();
       return;
     }
@@ -1223,36 +1264,38 @@ function setupInput() {
   });
 
   // Title Buttons
-  document.getElementById('btn-start-game').onclick = () => {
+  const startOrContinue = () => {
     window.soundEngine.ensureContext();
     window.soundEngine.playSelect();
     window.soundEngine.startBgm();
-
-    document.getElementById('screen-title').classList.add('hidden');
-    document.getElementById('game-hud').classList.remove('hidden');
-    state.screen = 'playing';
-
-    setTimeout(() => {
-      startIntroDialogue();
-    }, 300);
+    if (!hasSavedJourney && !state.world.preferencesChosen) openJourneyScreen();
+    else closeJourneyScreen();
   };
+  document.getElementById('btn-start-game').onclick = startOrContinue;
+  document.getElementById('btn-continue-game').onclick = startOrContinue;
 
-  document.getElementById('btn-open-journal-title').onclick = () => {
-    openJournalToChapter('ch-pcos');
-  };
-
-  document.getElementById('btn-replay').onclick = () => {
-    document.getElementById('screen-ending').classList.add('hidden');
+  document.getElementById('btn-milestone-continue').onclick = () => {
+    document.getElementById('screen-milestone').classList.add('hidden');
     state.screen = 'playing';
     updateQuestHUD('Free Exploration', 'The garden is in full bloom. Stroll peacefully.');
   };
 
-  document.getElementById('btn-ending-journal').onclick = () => {
+  document.getElementById('btn-milestone-journal').onclick = () => {
     openJournalToChapter('ch-saved');
   };
 
   document.getElementById('btn-sound-toggle').onclick = toggleMuteAudio;
   document.getElementById('btn-journal-toggle').onclick = toggleJournal;
+  const fullScreenButton=document.getElementById('btn-fullscreen');
+  fullScreenButton.onclick=async()=>{
+    try {
+      if(document.fullscreenElement) await document.exitFullscreen();
+      else await document.querySelector('.main-window').requestFullscreen();
+    } catch(error){ console.error('Full screen is unavailable in this browser.',error); }
+  };
+  const prefsButton=document.getElementById('btn-journey-settings');
+  if(prefsButton) prefsButton.onclick=openJourneyScreen;
+  document.getElementById('btn-journey-preferences').onclick=openJourneyScreen;
 
   document.getElementById('btn-window-close').onclick = () => {
     window.soundEngine.playTone(300, 0.1);
@@ -1283,6 +1326,8 @@ function toggleMuteAudio() {
 // 10. MAIN GAME LOOP (60 FPS with Y-Sorted Depth)
 // ============================================================================
 function gameLoop() {
+  if (!canvas || !ctx) return;
+  try {
   updatePlayerMovement();
   updateNihi();
   checkCollectibles();
@@ -1291,11 +1336,13 @@ function gameLoop() {
   ctx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
 
   // 1. Draw Map (Base or Blooming state based on quest progress)
-  if (state.assetsLoaded) {
-    const activeMap = (state.quests.mirrorPcosDone && state.quests.forestDone)
+  const activeMap = (state.quests.mirrorPcosDone && state.quests.forestDone)
       ? assets.mapBloom
       : assets.mapBase;
+  if (isImageReady(activeMap)) {
     ctx.drawImage(activeMap, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT);
+  } else {
+    drawFallbackGarden();
   }
 
   // 2. Draw Collectibles
@@ -1316,16 +1363,248 @@ function gameLoop() {
   // 5. Draw Atmospheric Effects (Gentle woodland light & Drifting petals, NO white blobs)
   drawForestThicketAtmosphere();
   updateAndDrawAmbientParticles();
-
-  requestAnimationFrame(gameLoop);
+  } catch (error) {
+    console.error('Bleuming frame failed; next frame will retry.', error);
+    ctx.setTransform(1,0,0,1,0,0);
+    ctx.fillStyle = '#9BBE91'; ctx.fillRect(0,0,CANVAS_WIDTH,CANVAS_HEIGHT);
+    ctx.fillStyle = '#493044'; ctx.font = '14px sans-serif'; ctx.fillText('Garden is recovering…', 220, 240);
+  } finally { requestAnimationFrame(gameLoop); }
 }
 
 // Start Game Engine
+// ============================================================================
+// PERSISTENCE, DAILY ADVENTURES, QUEST ENGINE, AI (Bleuming 3.0)
+// ============================================================================
+
+const SAVE_KEY = 'bleuming_save_v1';
+const JOURNEYS_KEY = 'bleuming_journey_preferences_v1';
+const journeyOptions = [
+  ['pcos_pcod','PCOS & PCOD Awareness','Body signals, symptom awareness, and questions for a healthcare professional.'],
+  ['postpartum','Postpartum Wellbeing','Recovery, asking for support, and difficult emotions after childbirth.'],
+  ['emotional_wellbeing','Emotional Wellbeing','Everyday overwhelm, grounding, and supportive conversations.'],
+  ['body_image','Body Image & Self-Compassion','Stories about comparison, acceptance, and self-kindness.'],
+  ['physical_wellbeing','Everyday Physical Wellbeing','Movement, rest, and flexible routines without weight or calorie goals.'],
+  ['cozy_adventures','Just Cozy Adventures','Exploration, collecting, puzzles, crafting, and magical mysteries.']
+];
+let selectedJourneys = [];
+function loadJourneyPreferences(){
+  try { selectedJourneys = JSON.parse(localStorage.getItem(JOURNEYS_KEY) || '[]'); if(!Array.isArray(selectedJourneys)) selectedJourneys=[]; }
+  catch(error){ console.error('Could not load journey preferences.', error); selectedJourneys=[]; }
+}
+function saveJourneyPreferences(){
+  selectedJourneys = Array.from(document.querySelectorAll('[data-journey]:checked')).map(el=>el.dataset.journey);
+  state.world.preferencesChosen=true;
+  try { localStorage.setItem(JOURNEYS_KEY, JSON.stringify(selectedJourneys)); }
+  catch(error){ console.error('Could not save journey preferences.', error); }
+  closeJourneyScreen();
+}
+function openJourneyScreen(){
+  const overlay=document.getElementById('screen-journeys');
+  if(!overlay) return;
+  const grid=document.getElementById('journey-cards'); grid.innerHTML='';
+  journeyOptions.forEach(([id,title,description])=>{
+    const label=document.createElement('label'); label.className='journey-card';
+    const input=document.createElement('input'); input.type='checkbox'; input.dataset.journey=id; input.checked=selectedJourneys.includes(id);
+    const copy=document.createElement('span'); copy.innerHTML='<strong>'+title+'</strong><small>'+description+'</small>';
+    label.append(input,copy); grid.appendChild(label);
+  });
+  overlay.classList.remove('hidden'); state.screen='onboarding';
+}
+function closeJourneyScreen(){
+  document.getElementById('screen-journeys').classList.add('hidden');
+  document.getElementById('screen-title').classList.add('hidden');
+  document.getElementById('game-hud').classList.remove('hidden'); state.screen='playing';
+  state.world.newSave=false; hasSavedJourney=true; saveGame();
+  if(!state.world.introSeen){ state.world.introSeen=true; setTimeout(startIntroDialogue,250); }
+}
+let hasSavedJourney = false;
+state.world = state.world || {
+  day: 1,
+  relationship: 0,
+  recentActivities: [],
+  discovered: [],
+  plants: {},
+  newSave: true
+};
+
+function saveGame() {
+  try {
+    const payload = {
+      player: { x: state.player.x, y: state.player.y },
+      inventory: state.inventory.items.map(function(i){return i.id;}),
+      quests: {
+        current: state.quests.current,
+        mirrorPcosDone: state.quests.mirrorPcosDone,
+        postpartumDone: state.quests.postpartumDone,
+        forestDone: state.quests.forestDone
+      },
+      floraCollected: floraCollectibles.map(function(f){return f.collected;}),
+      world: state.world,
+      daily: state.dailyAdventures || []
+    };
+    localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
+    } catch(e) { console.error('Could not save Bleuming progress.', e); }
+}
+
+function loadGame() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (!raw) return false;
+    const d = JSON.parse(raw);
+    if (d.player) { state.player.x = d.player.x; state.player.y = d.player.y; }
+    if (Array.isArray(d.floraCollected)) d.floraCollected.forEach(function(c,i){ if(floraCollectibles[i]) floraCollectibles[i].collected = !!c; });
+    const savedInventory = Array.isArray(d.inventory) ? d.inventory : [];
+    state.inventory.items = savedInventory
+      .filter(function(id, index){ return typeof id === 'string' && savedInventory.indexOf(id) === index; })
+      .map(function(id){ return floraCollectibles.find(function(item){ return item.id === id; }); })
+      .filter(Boolean);
+    updateInventoryHUD();
+    if (d.quests) {
+      state.quests.current = d.quests.current || state.quests.current;
+      state.quests.mirrorPcosDone = !!d.quests.mirrorPcosDone;
+      state.quests.postpartumDone = !!d.quests.postpartumDone;
+      state.quests.forestDone = !!d.quests.forestDone;
+    }
+    if (d.world) state.world = Object.assign(state.world, d.world);
+    if (Array.isArray(d.daily)) state.dailyAdventures = d.daily;
+    const hasJourneyProgress = state.quests.current !== 'meet_nihi'
+      || state.inventory.items.length > 0
+      || state.quests.mirrorPcosDone
+      || state.quests.postpartumDone
+      || state.quests.forestDone;
+    return state.world.newSave === false || hasJourneyProgress;
+  } catch(e) { console.error('Could not load Bleuming save.', e); return false; }
+}
+
+const questEngine = {
+  active: [],
+  completed: [],
+  start: function(q) { this.active.push(Object.assign({status:'active'}, q)); saveGame(); },
+  complete: function(id) {
+    const i = this.active.findIndex(function(q){return q.id===id;});
+    if (i>=0){ const q=this.active.splice(i,1)[0]; q.status='completed'; this.completed.push(q); saveGame(); }
+  },
+  abandon: function(id){ const i = this.active.findIndex(function(q){return q.id===id;}); if(i>=0){ this.active.splice(i,1); saveGame(); } }
+};
+
+const DAILY_TEMPLATES = [
+  { id:'mystery_light', title:'A Strange Light Beneath the Pond', type:'mystery', desc:'Investigate the shimmering light under the pond stones.', location:'pond', objectives:['Examine pond','Collect dewdrop'], reward:'dewdrop' },
+  { id:'hidden_door', title:'The Hidden Greenhouse Door', type:'exploration', desc:'Find the tiny door behind the old greenhouse.', location:'greenhouse', objectives:['Find door','Open it'], reward:'charm' },
+  { id:'new_flower', title:'A Flower of Unknown Color', type:'garden', desc:'Discover the flower blooming in a new color.', location:'garden', objectives:['Find flower'], reward:'seed' },
+  { id:'lost_letters', title:'Misplaced Letters', type:'collection', desc:'Help a character find their lost letters.', location:'cottage', objectives:['Find 3 letters'], reward:'note' },
+  { id:'storm_path', title:'Path After the Storm', type:'exploration', desc:'A new path appears after the storm.', location:'forest', objectives:['Walk the path'], reward:'map' }
+];
+
+function generateDailyAdventures() {
+  const day = state.world.day || 1;
+  const rng = function(seed) { let x = Math.sin(seed)*10000; return x - Math.floor(x); };
+  const recent = state.world.recentActivities || [];
+  const pool = DAILY_TEMPLATES.filter(function(t){ return recent.indexOf(t.id) === -1; });
+  const chosen = [];
+  let seed = day * 9973;
+  const available = (pool.length >= 3 ? pool : DAILY_TEMPLATES).slice();
+  for (let i=0;i<3 && i<available.length;i++){
+    const idx = Math.floor(rng(seed+i)*available.length);
+    const t = available.splice(idx, 1)[0];
+    chosen.push(Object.assign({}, t));
+  }
+  state.dailyAdventures = chosen;
+  state.world.recentActivities = chosen.map(function(c){return c.id;}).concat(recent).slice(0,8);
+  saveGame();
+  return chosen;
+}
+
+window.aiClient = {
+  async request(path, payload) {
+    try {
+      const r = await fetch(path, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload) });
+      if (!r.ok) throw new Error('http_'+r.status);
+      return await r.json();
+    } catch(e) { console.warn('Nihi service is unavailable; using local dialogue.', e); return null; }
+  },
+  async talkToNihi(message, context) {
+    const data = await this.request('/api/nihi', {
+      messages: [
+        { role:'user', content: 'Context: ' + JSON.stringify(context) + '\nMessage: ' + message }
+      ],
+      max_tokens: 75
+    });
+    if (data && typeof data.content === 'string') return data.content.trim().split(/\s+/).slice(0,45).join(' ');
+    return fallbackNihiReply(message, context);
+  },
+  async getOptionalSuggestion(request, context) {
+    const data = await this.request('/api/nihi', {
+      messages: [
+        { role:'user', content: 'Give one or two concrete, optional, non-medical suggestions. Never diagnose. Ask one short clarifying question if needed.\nContext: ' + JSON.stringify(context) + '\nRequest: ' + request }
+      ],
+      max_tokens: 160
+    });
+    if (data && typeof data.content === 'string') return data.content.trim().split(/\s+/).slice(0,65).join(' ');
+    return fallbackSuggestion(request);
+  }
+};
+
+function fallbackNihiReply(message, context) {
+  const m = (message||'').toLowerCase();
+  if (m.indexOf('help')!==-1 || m.indexOf('overwhelm')!==-1) return 'I am here with you. Want to take a slow breath together, or stroll to the pond for a moment?';
+  if (m.indexOf('discover')!==-1 || m.indexOf('found')!==-1) return 'Ooh, a new discovery! Tell me more — I love hearing about garden finds.';
+  return 'That is lovely to hear. The garden feels a little brighter when you share things with me.';
+}
+function fallbackSuggestion(request) {
+  return 'Here is one gentle idea: take a short, unhurried stroll and notice three small details you enjoy. You can skip this anytime — no pressure.';
+}
+
+const origShowDialogue = showDialogue;
+showDialogue = function(node, speaker, expression) {
+  if (speaker === 'Nihi' && node && Array.isArray(node.choices)) {
+    const hasAdvice = node.choices.some(function(c){ return c.text && c.text.indexOf('Little Something')!==-1; });
+    if (!hasAdvice) {
+      node.choices = node.choices.concat([{
+        text: '🌸 A Little Something for Today',
+        action: function() {
+          const req = prompt('What would you like a gentle suggestion about? (e.g. feeling overwhelmed, rest, body image)');
+          if (req) {
+            window.aiClient.getOptionalSuggestion(req, { day: state.world.day, inventory: state.inventory.items.map(function(i){return i.id;}) }).then(function(reply) {
+              showDialogue({ text: reply, choices:[{text:'Thank you, Nihi'}] }, 'Nihi', 'happy');
+            });
+          }
+        }
+      }]);
+    }
+  }
+  return origShowDialogue(node, speaker, expression);
+};
+
+setInterval(function(){ if(!window.BLEUMING_HUB_MODE) saveGame(); }, 5000);
+
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    if (window.BLEUMING_HUB_MODE) return;
+    hasSavedJourney = loadGame();
+    loadJourneyPreferences();
+    if(hasSavedJourney){
+      document.getElementById('btn-start-game').classList.add('hidden');
+      document.getElementById('btn-continue-game').classList.remove('hidden');
+      document.getElementById('continue-day').textContent=state.world.day||1;
+    }
+    if (!state.dailyAdventures || !state.dailyAdventures.length) generateDailyAdventures();
+    saveGame();
+  }, 100);
+}, { once: true });
+
 window.addEventListener('load', () => {
   setupInput();
   setupJournal();
   initAmbientParticles();
-  loadGameAssets(() => {
-    requestAnimationFrame(gameLoop);
-  });
+  loadGameAssets(() => { state.assetsLoaded = true; });
+  if (!window.BLEUMING_HUB_MODE && !gameLoopStarted) { gameLoopStarted = true; requestAnimationFrame(gameLoop); }
+  document.getElementById('btn-journey-settings').onclick=openJourneyScreen;
+  document.getElementById('btn-journey-save').onclick=saveJourneyPreferences;
+  document.getElementById('btn-journey-skip').onclick=()=>{ selectedJourneys=[]; saveJourneyPreferences(); };
+  document.getElementById('btn-journey-clear').onclick=()=>{
+    selectedJourneys=[];
+    try { localStorage.removeItem(JOURNEYS_KEY); }
+    catch(error){ console.error('Could not clear saved journey preferences.',error); }
+    document.querySelectorAll('[data-journey]').forEach(input=>{ input.checked=false; });
+  };
 });
