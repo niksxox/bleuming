@@ -29,3 +29,12 @@
 .unrushed-end.hidden{display:none}
 @media(max-width:640px){.unrushed-topline{flex-direction:column}.unrushed-stage{padding:8px}.unrushed-stage-bar{font-size:8px}.unrushed-controls{align-items:flex-end;flex-direction:column}.uw-actions{justify-content:flex-start}.unrushed-bottom{flex-direction:column;gap:4px}.unrushed-end{padding:15px}.unrushed-end h2{font-size:13px}}
 @media(prefers-reduced-motion:reduce){.unrushed-exit,.unrushed-controls button,.unrushed-end button{transition:none}}
+
+.unrushed-home-hero{position:relative;overflow:hidden;padding:clamp(22px,4vw,42px);border:1px solid rgba(231,203,255,.45);border-radius:22px;background:radial-gradient(circle at 88% 12%,rgba(244,195,231,.24),transparent 32%),linear-gradient(135deg,#27264f 0%,#554273 55%,#78618e 100%);color:#fff4fb;box-shadow:0 18px 42px rgba(36,24,67,.18)}
+.unrushed-home-hero:after{content:"✦   ·   ✧       ·      ✦";position:absolute;right:20px;bottom:18px;color:rgba(255,241,191,.45);font:16px monospace;letter-spacing:10px;pointer-events:none}
+.unrushed-home-hero h1{max-width:680px;margin:14px 0;font:clamp(18px,2.7vw,30px)/1.65 "Press Start 2P",monospace;color:#fff0fb}
+.unrushed-home-hero p{max-width:610px;color:#e9def8;line-height:1.8;font-size:15px}
+.unrushed-home-eyebrow{font:10px "Press Start 2P",monospace;color:#c3edff;letter-spacing:.04em}
+.unrushed-home-note{margin-top:16px;color:#eadcf5;font-size:12px;letter-spacing:.02em}
+
+.hub-sidebar .pet-card{display:none!important}
