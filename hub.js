@@ -509,7 +509,7 @@ window.BLEUMING_HUB_MODE = true;
     document.getElementById('screen-title').classList.add('hidden');
     document.getElementById('game-hud').classList.add('hidden');
     hub.classList.remove('hidden');state.screen='hub';document.getElementById('desktop-container').inert=true;document.body.classList.toggle('reduce-motion',reducedMotion());applyTheme(profile.equipped.wallpaper||profile.preferences.theme);renderHubPage('home');
-    if(firstBoot)showFirstSetup();else if(!profile.companionPromptSeen&&!profile.companionPromptDisabled)setTimeout(maybeShowCompanionChoices,500);
+
     requestAnimationFrame(engineLoop);
   },{once:true});
 })();
