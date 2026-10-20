@@ -185,12 +185,14 @@ window.BLEUMING_HUB_MODE = true;
   }
 
   function renderHubPage(nextPage) {
+    if(page==='unrushed'&&nextPage!=='unrushed'&&window.UnrushedWorld)window.UnrushedWorld.destroy();
     page=nextPage||page;
     document.querySelectorAll('.hub-nav [data-screen]').forEach(btn=>btn.classList.toggle('selected',btn.dataset.screen===page));
-    const titles={home:'My desktop',worlds:'CD player',minigames:'Mini games',realtalk:'Real Talk',album:'Collectible album',room:'Customize room',settings:'Settings & preferences'};
+    const titles={home:'My desktop',unrushed:'The Unrushed World',worlds:'CD player',minigames:'Mini games',realtalk:'Real Talk',album:'Collectible album',room:'Customize room',settings:'Settings & preferences'};
     document.getElementById('hub-window-title').textContent=titles[page]||titles.home;
     document.getElementById('hub-controls-hint').innerHTML=page==='realtalk'?'Click a response · <kbd>TAB</kbd> + <kbd>ENTER</kbd> also works':'<kbd>WASD</kbd> move <kbd>SPACE</kbd> jump';
     if(page==='home') renderHome();
+    if(page==='unrushed'&&window.UnrushedWorld) window.UnrushedWorld.render(content,()=>renderHubPage('home'));
     if(page==='worlds') renderWorlds();
     if(page==='minigames') renderMinigames();
     if(page==='realtalk'&&window.RealTalk) window.RealTalk.render(content,()=>renderHubPage('home'));
@@ -200,11 +202,8 @@ window.BLEUMING_HUB_MODE = true;
     renderPet();
   }
   function renderHome() {
-    const unlocked=profile.unlockedWorlds.length;
-    content.innerHTML=`<section class="hub-hero"><div class="hub-hero-copy"><div class="hub-eyebrow">YOUR COMPUTER IS FEELING MAGICAL</div><h1>Welcome to Bleuming.exe</h1><p>Pick a CD, meet a new world, and bring home a little treasure. Nihi is on the desktop. (They have admin privileges.)</p><div class="hub-action-row"><button class="hub-card-button" data-action="open-worlds">▶ Put a CD in</button><button class="hub-card-button lavender" data-action="resume">↻ ${profile.completed.length?'Play again':'Quick play'}</button></div></div></section>
-      <div class="hub-card-grid"><article class="hub-card"><div class="hub-eyebrow">CD LIBRARY</div><h3>${unlocked} ${unlocked===1?'world':'worlds'} unlocked</h3><p>${profile.completed.length} adventures completed · ${profile.inventory.length} keepsakes in your album</p><button class="hub-card-button lavender" data-action="open-worlds">Browse discs</button></article><article class="hub-card"><div class="hub-eyebrow">A FRIENDLY HELLO</div><h3>Hey, you’re here. What sounds good?</h3><p>Play, wander, talk, or keep exploring your desktop. No mood check needed.</p><button class="hub-card-button mint" data-action="open-companion-menu">Ask Nihi</button></article></div>
-      <section class="rt-home-prompt"><div><div class="hub-eyebrow">NEW PLAYABLE MODE</div><h2>Real Talk</h2><p>Try different ways through a tricky social moment. Choices shape the next scene, and every path can be replayed.</p></div><button class="hub-card-button" data-action="navigate" data-page="realtalk">Enter Real Talk →</button></section>
-      <h2 class="hub-section-title">RECENT SIGNALS</h2><div class="hub-card"><p>${profile.completed.length?`You have cleared ${profile.completed.map(worldTitle).join(' and ')}. Your next disc is ready.`:'The CD player has two worlds in its collection. The moon disc unlocks when you clear Petalbyte Woods.'}</p></div>`;
+    content.innerHTML=`<section class="unrushed-home-hero"><div class="unrushed-home-eyebrow">A QUIETER KIND OF ADVENTURE</div><h1>The Unrushed World</h1><p>A small surreal puzzle world. Find three lights, shift between Stillness and Flow, and discover a path at your own pace.</p><div class="hub-action-row"><button class="hub-card-button" data-action="navigate" data-page="unrushed">✧ Enter the world</button><button class="hub-card-button lavender" data-action="navigate" data-page="realtalk">Explore Real Talk</button></div><div class="unrushed-home-note">No timers. No streaks. No chatbot. Your progress stays on this device.</div></section>
+      <div class="hub-card-grid"><article class="hub-card"><div class="hub-eyebrow">PLAY YOUR WAY</div><h3>Small puzzles, open-ended time</h3><p>Experiment, change the world, and take breaks whenever you want. There is no penalty for leaving.</p><button class="hub-card-button lavender" data-action="navigate" data-page="unrushed">Continue exploring →</button></article><article class="hub-card"><div class="hub-eyebrow">ANOTHER WAY THROUGH</div><h3>Real Talk</h3><p>Optional fictional social situations with branching outcomes. Skip any scene you don't want to play.</p><button class="hub-card-button mint" data-action="navigate" data-page="realtalk">Open Real Talk</button></article></div>`;
   }
   function worldTitle(id) { return id==='moonmall'?'Moon Mall After Hours':'Petalbyte Woods'; }
   function renderWorlds() {
