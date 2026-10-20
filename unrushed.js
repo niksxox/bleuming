@@ -70,13 +70,14 @@
     canvas.addEventListener('click',focusCanvas);
     mount.addEventListener('click',handleClick);
     keyHandler=handleKey;root.addEventListener('keydown',keyHandler);
-    draw();canvas.focus({preventScroll:true});
+    draw();afterAction();canvas.focus({preventScroll:true});
   }
   let mount=null,canvas=null,ctx=null,gameState=null,exitCallback=null,keyHandler=null,running=false;
   function focusCanvas(){if(canvas)canvas.focus({preventScroll:true});}
   function save(){try{root.localStorage.setItem(SAVE_KEY,JSON.stringify(gameState));}catch(_){}}
   function handleKey(e){
     if(!running||!mount||!mount.isConnected)return;
+    if(e.target&&e.target.closest&&e.target.closest('button,input,textarea,select'))return;
     const key=e.key.toLowerCase();
     const dirs={arrowup:[0,-1],w:[0,-1],arrowdown:[0,1],s:[0,1],arrowleft:[-1,0],a:[-1,0],arrowright:[1,0],d:[1,0]};
     if(dirs[key]){e.preventDefault();step(...dirs[key]);}
