@@ -1,0 +1,59 @@
+/* The Unrushed World — calm Y2K puzzle surface. */
+.unrushed-shell{max-width:920px;margin:0 auto;color:#f8f0ff}
+.unrushed-topline{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin:4px 0 18px}
+.unrushed-topline h1{font-family:"Press Start 2P",monospace;font-size:clamp(16px,2vw,23px);line-height:1.55;margin:8px 0;color:#fff2fb}
+.unrushed-topline p{max-width:620px;color:#e3d9f4;line-height:1.6;margin:0;font-size:14px}
+.unrushed-eyebrow{font:10px "Press Start 2P",monospace;letter-spacing:.04em;color:#bcecff}
+.unrushed-exit,.unrushed-controls button,.unrushed-end button{border:1px solid rgba(255,255,255,.35);border-radius:12px;background:rgba(255,255,255,.12);color:#fff;padding:10px 13px;font:600 12px Quicksand,sans-serif;cursor:pointer;transition:background .15s ease,transform .15s ease}
+.unrushed-exit:hover,.unrushed-controls button:hover,.unrushed-end button:hover{background:rgba(255,255,255,.22);transform:translateY(-1px)}
+.unrushed-stage{border:1px solid rgba(226,207,255,.4);border-radius:18px;padding:12px;background:linear-gradient(145deg,rgba(38,35,75,.97),rgba(75,57,104,.96));box-shadow:0 16px 40px rgba(22,16,49,.22)}
+.unrushed-stage-bar{display:flex;justify-content:space-between;gap:12px;color:#f5d9f0;font:10px "Press Start 2P",monospace;padding:3px 2px 12px}
+#uw-canvas{display:block;width:100%;height:auto;max-width:576px;margin:0 auto;border-radius:8px;image-rendering:pixelated;outline:2px solid rgba(255,255,255,.13);outline-offset:2px;touch-action:manipulation}
+#uw-canvas:focus-visible{outline:3px solid #fff0b2;outline-offset:4px}
+.unrushed-controls{display:flex;justify-content:space-between;align-items:center;gap:14px;max-width:576px;margin:14px auto 2px}
+.uw-dpad{display:grid;grid-template-columns:repeat(3,38px);grid-template-rows:repeat(2,34px);gap:4px}
+.uw-dpad button{padding:4px!important;font-size:17px!important;grid-row:2}
+.uw-dpad button[data-move="0,-1"]{grid-column:2;grid-row:1}
+.uw-dpad button[data-move="-1,0"]{grid-column:1;grid-row:2}
+.uw-dpad button[data-move="0,1"]{grid-column:2;grid-row:2}
+.uw-dpad button[data-move="1,0"]{grid-column:3;grid-row:2}
+.uw-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:8px}
+.unrushed-controls .uw-shift{background:#f2c9e7;color:#4b365f;border-color:#f9e6f5;font-weight:700}
+.unrushed-controls kbd{font:10px monospace;opacity:.7;margin-left:6px}
+.unrushed-bottom{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;padding:10px 2px 0;color:#e3d9f4;font-size:12px;line-height:1.6}
+.unrushed-bottom p{margin:0}
+.unrushed-end{margin-top:14px;padding:22px;border:1px solid rgba(255,235,199,.5);border-radius:16px;background:linear-gradient(135deg,rgba(83,57,109,.96),rgba(42,55,94,.96));text-align:center}
+.unrushed-end h2{font-family:"Press Start 2P",monospace;font-size:16px;line-height:1.7;color:#fff0c5}
+.unrushed-end p{max-width:540px;margin:0 auto 16px;line-height:1.7;color:#f0e5fa}
+.unrushed-end>div:last-child{display:flex;justify-content:center;flex-wrap:wrap;gap:8px}
+.unrushed-end.hidden{display:none}
+@media(max-width:640px){.unrushed-topline{flex-direction:column}.unrushed-stage{padding:8px}.unrushed-stage-bar{font-size:8px}.unrushed-controls{align-items:flex-end;flex-direction:column}.uw-actions{justify-content:flex-start}.unrushed-bottom{flex-direction:column;gap:4px}.unrushed-end{padding:15px}.unrushed-end h2{font-size:13px}}
+@media(prefers-reduced-motion:reduce){.unrushed-exit,.unrushed-controls button,.unrushed-end button{transition:none}}
+
+.unrushed-home-hero{position:relative;overflow:hidden;padding:clamp(22px,4vw,42px);border:1px solid rgba(231,203,255,.45);border-radius:22px;background:radial-gradient(circle at 88% 12%,rgba(244,195,231,.24),transparent 32%),linear-gradient(135deg,#27264f 0%,#554273 55%,#78618e 100%);color:#fff4fb;box-shadow:0 18px 42px rgba(36,24,67,.18)}
+.unrushed-home-hero:after{content:"✦   ·   ✧       ·      ✦";position:absolute;right:20px;bottom:18px;color:rgba(255,241,191,.45);font:16px monospace;letter-spacing:10px;pointer-events:none}
+.unrushed-home-hero h1{max-width:680px;margin:14px 0;font:clamp(18px,2.7vw,30px)/1.65 "Press Start 2P",monospace;color:#fff0fb}
+.unrushed-home-hero p{max-width:610px;color:#e9def8;line-height:1.8;font-size:15px}
+.unrushed-home-eyebrow{font:10px "Press Start 2P",monospace;color:#c3edff;letter-spacing:.04em}
+.unrushed-home-note{margin-top:16px;color:#eadcf5;font-size:12px;letter-spacing:.02em}
+
+.hub-sidebar .pet-card{display:none!important}
+
+.unrushed-library-heading{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;margin:26px 0 12px}
+.unrushed-library-heading .hub-section-title{margin:8px 0 0}
+.unrushed-library-heading>p{color:var(--hub-muted,#d8cde9);font-size:12px}
+.unrushed-game-library{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.unrushed-game-card{overflow:hidden;display:flex;flex-direction:column;min-width:0;border:1px solid rgba(222,203,255,.35);border-radius:16px;background:rgba(255,255,255,.055);box-shadow:0 8px 24px rgba(25,18,48,.1)}
+.unrushed-card-art{height:120px;display:flex;align-items:center;justify-content:center;gap:20px;font:36px monospace;color:#fff0cf;overflow:hidden;position:relative}
+.unrushed-card-art span:nth-child(2){font-size:48px;transform:translateY(-9px)}
+.unrushed-art-world{background:radial-gradient(circle at 50% 80%,#8d81bb 0%,transparent 45%),linear-gradient(135deg,#20254d,#397c91)}
+.unrushed-art-mirror{background:radial-gradient(circle at 45% 40%,#f9d5ef 0%,transparent 26%),linear-gradient(135deg,#6a4c85,#d29cc5)}
+.unrushed-art-moon{background:radial-gradient(circle at 70% 30%,#fff0bd 0%,transparent 12%),linear-gradient(135deg,#20254d,#7775a8)}
+.unrushed-art-echo{background:radial-gradient(circle at 20% 70%,#c3f0e7 0%,transparent 26%),linear-gradient(135deg,#453d70,#ba8cb4)}
+.unrushed-card-copy{padding:16px;display:flex;flex-direction:column;align-items:flex-start;gap:8px;flex:1}
+.unrushed-card-copy h3{font-size:16px;margin:0;color:#fff2fb}
+.unrushed-card-copy p{font-size:13px;line-height:1.65;color:#e1d7f0;margin:0 0 8px}
+.unrushed-card-copy .hub-card-button{margin-top:auto}
+.unrushed-coming{font-size:11px;color:#d4c4e9;border:1px solid rgba(224,206,255,.25);padding:7px 9px;border-radius:9px;background:rgba(255,255,255,.04)}
+.unrushed-library-footnote{font-size:11px;line-height:1.7;color:#cfc2e2;margin:18px 0 0}
+@media(max-width:650px){.unrushed-game-library{grid-template-columns:1fr}.unrushed-library-heading{align-items:flex-start;flex-direction:column}.unrushed-card-art{height:96px}}

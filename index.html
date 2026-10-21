@@ -10,6 +10,7 @@
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="hub.css">
   <link rel="stylesheet" href="realtalk.css">
+  <link rel="stylesheet" href="unrushed.css">
 </head>
 <body>
   <div id="desktop-container">
@@ -404,12 +405,11 @@
           <div class="pet-screen"><canvas id="pet-preview" width="96" height="96" aria-label="Nihi companion"></canvas><span class="pet-sparkle">✦</span></div>
           <h2>Nihi <span id="hub-mood">✦ curious</span></h2>
           <p id="hub-pet-line">A tiny signal buddy, ready to explore.</p>
-          <button class="hub-action-btn" data-action="pet">Boop Nihi</button>
-          <button class="hub-secondary-btn" data-action="chat">Chat with Nihi</button>
           <button id="hub-grounding" class="hub-secondary-btn hidden" data-action="grounding">Take a tiny pause</button>
         </section>
         <nav class="hub-nav" aria-label="Desktop">
           <button class="selected" data-screen="home">⌂ <span>My desktop</span></button>
+          <button data-screen="unrushed">✧ <span>Unrushed World</span></button>
           <button data-screen="worlds">◉ <span>CD player</span></button>
           <button data-screen="minigames">▦ <span>Mini games</span></button>
           <button data-screen="realtalk">◈ <span>Real Talk</span></button>
@@ -445,5 +445,6 @@
   <script src="game.js"></script>
   <script src="hub.js"></script>
   <script src="real-talk.js"></script>
+  <script src="unrushed.js"></script>
 </body>
 </html>

@@ -185,12 +185,14 @@ window.BLEUMING_HUB_MODE = true;
   }
 
   function renderHubPage(nextPage) {
+    if(page==='unrushed'&&nextPage!=='unrushed'&&window.UnrushedWorld)window.UnrushedWorld.destroy();
     page=nextPage||page;
     document.querySelectorAll('.hub-nav [data-screen]').forEach(btn=>btn.classList.toggle('selected',btn.dataset.screen===page));
-    const titles={home:'My desktop',worlds:'CD player',minigames:'Mini games',realtalk:'Real Talk',album:'Collectible album',room:'Customize room',settings:'Settings & preferences'};
+    const titles={home:'My desktop',unrushed:'The Unrushed World',worlds:'CD player',minigames:'Mini games',realtalk:'Real Talk',album:'Collectible album',room:'Customize room',settings:'Settings & preferences'};
     document.getElementById('hub-window-title').textContent=titles[page]||titles.home;
     document.getElementById('hub-controls-hint').innerHTML=page==='realtalk'?'Click a response · <kbd>TAB</kbd> + <kbd>ENTER</kbd> also works':'<kbd>WASD</kbd> move <kbd>SPACE</kbd> jump';
     if(page==='home') renderHome();
+    if(page==='unrushed'&&window.UnrushedWorld) window.UnrushedWorld.render(content,()=>renderHubPage('home'));
     if(page==='worlds') renderWorlds();
     if(page==='minigames') renderMinigames();
     if(page==='realtalk'&&window.RealTalk) window.RealTalk.render(content,()=>renderHubPage('home'));
@@ -200,11 +202,15 @@ window.BLEUMING_HUB_MODE = true;
     renderPet();
   }
   function renderHome() {
-    const unlocked=profile.unlockedWorlds.length;
-    content.innerHTML=`<section class="hub-hero"><div class="hub-hero-copy"><div class="hub-eyebrow">YOUR COMPUTER IS FEELING MAGICAL</div><h1>Welcome to Bleuming.exe</h1><p>Pick a CD, meet a new world, and bring home a little treasure. Nihi is on the desktop. (They have admin privileges.)</p><div class="hub-action-row"><button class="hub-card-button" data-action="open-worlds">▶ Put a CD in</button><button class="hub-card-button lavender" data-action="resume">↻ ${profile.completed.length?'Play again':'Quick play'}</button></div></div></section>
-      <div class="hub-card-grid"><article class="hub-card"><div class="hub-eyebrow">CD LIBRARY</div><h3>${unlocked} ${unlocked===1?'world':'worlds'} unlocked</h3><p>${profile.completed.length} adventures completed · ${profile.inventory.length} keepsakes in your album</p><button class="hub-card-button lavender" data-action="open-worlds">Browse discs</button></article><article class="hub-card"><div class="hub-eyebrow">A FRIENDLY HELLO</div><h3>Hey, you’re here. What sounds good?</h3><p>Play, wander, talk, or keep exploring your desktop. No mood check needed.</p><button class="hub-card-button mint" data-action="open-companion-menu">Ask Nihi</button></article></div>
-      <section class="rt-home-prompt"><div><div class="hub-eyebrow">NEW PLAYABLE MODE</div><h2>Real Talk</h2><p>Try different ways through a tricky social moment. Choices shape the next scene, and every path can be replayed.</p></div><button class="hub-card-button" data-action="navigate" data-page="realtalk">Enter Real Talk →</button></section>
-      <h2 class="hub-section-title">RECENT SIGNALS</h2><div class="hub-card"><p>${profile.completed.length?`You have cleared ${profile.completed.map(worldTitle).join(' and ')}. Your next disc is ready.`:'The CD player has two worlds in its collection. The moon disc unlocks when you clear Petalbyte Woods.'}</p></div>`;
+    content.innerHTML=`<section class="unrushed-home-hero"><div class="unrushed-home-eyebrow">ONE UNIVERSE · MANY WAYS TO PLAY</div><h1>Find the world that fits today.</h1><p>Bleuming is a collection of small, thoughtful games about real-life experiences. Pick a world that feels relevant, skip anything that doesn't, and leave whenever you're ready.</p><div class="hub-action-row"><button class="hub-card-button" data-action="navigate" data-page="unrushed">✧ Play The Unrushed World</button></div><div class="unrushed-home-note">No diagnosis required · No daily streaks · No AI chatbot · Progress stays on this device</div></section>
+      <div class="unrushed-library-heading"><div><div class="hub-eyebrow">THE BLEUMING COLLECTION</div><h2 class="hub-section-title">Different worlds, different experiences</h2></div><p>Choose by curiosity, not by label.</p></div>
+      <div class="unrushed-game-library">
+        <article class="unrushed-game-card unrushed-card-playable"><div class="unrushed-card-art unrushed-art-world"><span>✦</span><span>☾</span><span>✧</span></div><div class="unrushed-card-copy"><div class="hub-eyebrow">ENVIRONMENTAL PUZZLE</div><h3>The Unrushed World</h3><p>Shift between Stillness and Flow to find your way through a quiet, surreal world. About agency, flexibility, and taking things at your own pace.</p><button class="hub-card-button" data-action="navigate" data-page="unrushed">Play now →</button></div></article>
+        <article class="unrushed-game-card"><div class="unrushed-card-art unrushed-art-mirror"><span>◌</span><span>✧</span></div><div class="unrushed-card-copy"><div class="hub-eyebrow">REFLECTION & EXPLORATION</div><h3>Changing Mirror</h3><p>A visual puzzle journey about body image, identity, and the pressure to look a certain way. Designed to avoid weight-loss goals or judging bodies.</p><span class="unrushed-coming">Design concept · Not playable yet</span></div></article>
+        <article class="unrushed-game-card"><div class="unrushed-card-art unrushed-art-moon"><span>☾</span><span>☁</span></div><div class="unrushed-card-copy"><div class="hub-eyebrow">GENTLE ROUTE-FINDING</div><h3>Tired Moon</h3><p>A postpartum-inspired world about limited energy, accepting help, and finding small routes through an overwhelming landscape. No baby-care simulation or perfect-parent scoring.</p><span class="unrushed-coming">Design concept · Not playable yet</span></div></article>
+        <article class="unrushed-game-card"><div class="unrushed-card-art unrushed-art-echo"><span>↝</span><span>♡</span></div><div class="unrushed-card-copy"><div class="hub-eyebrow">CHOICE & CONSEQUENCE</div><h3>Soft Boundaries</h3><p>A short interactive puzzle about social pressure, saying no, asking for support, and discovering that more than one response can be valid.</p><span class="unrushed-coming">Design concept · Not playable yet</span></div></article>
+      </div>
+      <p class="unrushed-library-footnote">These are creative game concepts, not medical advice or treatment. PCOS and PCOD are commonly used names for the same condition, so we should design one thoughtful experience around that experience rather than duplicate it. Players can explore multiple worlds without selecting or disclosing any diagnosis.</p>`;
   }
   function worldTitle(id) { return id==='moonmall'?'Moon Mall After Hours':'Petalbyte Woods'; }
   function renderWorlds() {
@@ -510,7 +516,7 @@ window.BLEUMING_HUB_MODE = true;
     document.getElementById('screen-title').classList.add('hidden');
     document.getElementById('game-hud').classList.add('hidden');
     hub.classList.remove('hidden');state.screen='hub';document.getElementById('desktop-container').inert=true;document.body.classList.toggle('reduce-motion',reducedMotion());applyTheme(profile.equipped.wallpaper||profile.preferences.theme);renderHubPage('home');
-    if(firstBoot)showFirstSetup();else if(!profile.companionPromptSeen&&!profile.companionPromptDisabled)setTimeout(maybeShowCompanionChoices,500);
+
     requestAnimationFrame(engineLoop);
   },{once:true});
 })();
